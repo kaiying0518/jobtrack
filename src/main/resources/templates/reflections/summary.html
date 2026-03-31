@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>振り返り</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand">JobTrack</div>
+        <nav class="nav-group">
+            <a class="nav-link" th:href="@{/dashboard}">ホーム</a>
+            <a class="nav-link" th:href="@{/applications}">応募一覧</a>
+            <a class="nav-link" th:href="@{/activities}">活動記録</a>
+            <a class="nav-link active" th:href="@{/reflections}">振り返り</a>
+            <a class="nav-link" th:href="@{/settings}">設定</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h1 class="page-title">振り返り</h1>
+                <p class="page-desc">最近の動きと全体の流れを見返せます。</p>
+            </div>
+        </div>
+
+        <section class="grid-3">
+            <div class="card stat-card">
+                <div class="stat-label">最近7日</div>
+                <div class="stat-value" th:text="${recent7Count}">0</div>
+                <div class="stat-sub">最近7日の動き</div>
+            </div>
+
+            <div class="card stat-card">
+                <div class="stat-label">最近30日</div>
+                <div class="stat-value" th:text="${recent30Count}">0</div>
+                <div class="stat-sub">この1か月の動き</div>
+            </div>
+
+            <div class="card stat-card">
+                <div class="stat-label">全体</div>
+                <div class="stat-value" th:text="${totalCount}">0</div>
+                <div class="stat-sub">これまでの応募数</div>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-title-row">
+                <h2 class="card-title">簡単フィードバック</h2>
+                <span class="card-subtext">今の状況をひとことにまとめています</span>
+            </div>
+
+            <div class="notice-list" th:if="${summaryMessages != null and !#lists.isEmpty(summaryMessages)}">
+                <div class="notice-item notice-info" th:each="msg : ${summaryMessages}" th:text="${msg}">
+                    フィードバック
+                </div>
+            </div>
+
+            <div class="empty-box" th:if="${summaryMessages == null or #lists.isEmpty(summaryMessages)}">
+                まだ振り返れる内容がありません。
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

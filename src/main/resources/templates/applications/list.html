@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>応募一覧</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand">JobTrack</div>
+        <nav class="nav-group">
+            <a class="nav-link" th:href="@{/dashboard}">ホーム</a>
+            <a class="nav-link active" th:href="@{/applications}">応募一覧</a>
+            <a class="nav-link" th:href="@{/activities}">活動記録</a>
+            <a class="nav-link" th:href="@{/reflections}">振り返り</a>
+            <a class="nav-link" th:href="@{/settings}">設定</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h1 class="page-title">応募一覧</h1>
+                <p class="page-desc">
+                    応募した会社と今の状況をまとめて確認できます。
+                </p>
+            </div>
+            <div class="topbar-actions">
+                <a class="btn btn-primary" th:href="@{/applications/new}">＋ 新しく追加</a>
+            </div>
+        </div>
+
+        <section class="card">
+            <div class="card-title-row">
+                <h2 class="card-title">条件で探す</h2>
+                <span class="card-subtext">会社名や状況で絞り込めます</span>
+            </div>
+
+            <form class="filter-bar" th:action="@{/applications}" method="get">
+                <input class="input" type="text" name="keyword"
+                       placeholder="会社名・職種で検索"
+                       th:value="${keyword}">
+
+                <select class="select" name="status">
+                    <option value="">すべての状況</option>
+                    <option value="APPLIED" th:selected="${status == 'APPLIED'}">応募済み</option>
+                    <option value="WEB_TEST" th:selected="${status == 'WEB_TEST'}">Webテスト</option>
+                    <option value="DOCUMENT_PASS" th:selected="${status == 'DOCUMENT_PASS'}">書類通過</option>
+                    <option value="INTERVIEW_1" th:selected="${status == 'INTERVIEW_1'}">一次面接</option>
+                    <option value="INTERVIEW_2" th:selected="${status == 'INTERVIEW_2'}">二次面接</option>
+                    <option value="FINAL_INTERVIEW" th:selected="${status == 'FINAL_INTERVIEW'}">最終面接</option>
+                    <option value="OFFER" th:selected="${status == 'OFFER'}">内定</option>
+                    <option value="REJECT" th:selected="${status == 'REJECT'}">見送り</option>
+                    <option value="WITHDRAWN" th:selected="${status == 'WITHDRAWN'}">辞退</option>
+                </select>
+
+                <select class="select" name="channel">
+                    <option value="">すべての応募方法</option>
+                    <option value="DIRECT" th:selected="${channel == 'DIRECT'}">企業サイトから直接応募</option>
+                    <option value="JOB_SITE" th:selected="${channel == 'JOB_SITE'}">求人サイト</option>
+                    <option value="AGENT" th:selected="${channel == 'AGENT'}">エージェント</option>
+                    <option value="SCOUT" th:selected="${channel == 'SCOUT'}">スカウト</option>
+                    <option value="OTHER" th:selected="${channel == 'OTHER'}">その他</option>
+                </select>
+
+                <select class="select" name="sort">
+                    <option value="updatedAt" th:selected="${sort == 'updatedAt'}">最近更新順</option>
+                    <option value="appliedDate" th:selected="${sort == 'appliedDate'}">応募日順</option>
+                    <option value="companyName" th:selected="${sort == 'companyName'}">会社名順</option>
+                </select>
+
+                <button class="btn btn-secondary" type="submit">絞り込む</button>
+            </form>
+        </section>
+
+        <section class="card">
+            <div class="card-title-row">
+                <h2 class="card-title">応募一覧</h2>
+                <span class="card-subtext">
+                    <span th:text="${#lists.size(applications)}">0</span> 件
+                </span>
+            </div>
+
+            <div class="table-wrap" th:if="${applications != null and !#lists.isEmpty(applications)}">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>会社 / 職種</th>
+                        <th>応募方法</th>
+                        <th>今の状況</th>
+                        <th>応募日</th>
+                        <th>次の予定</th>
+                        <th>最終更新</th>
+                        <th>操作</th>
+                        <th>履歴</th>
+                        <th>詳細</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="app : ${applications}">
+                        <td>
+                            <div class="company-cell">
+                                <div class="company-name" th:text="${app.companyName}">会社名</div>
+                                <div class="company-role" th:text="${app.positionName}">職種</div>
+                                
+
+                                <div th:if="${inactiveReminderMap != null and inactiveReminderMap[app.id]}"
+                                     style="margin-top: 6px;">
+                                    <span class="badge" style="opacity: 0.7;">2週間更新なし</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td th:text="${app.channel}">Direct</td>
+
+                        <td>
+                            <span class="badge"
+                                  th:text="${app.currentStatus == 'WEB_TEST' ? 'Webテスト' : app.currentStatus}">
+                                応募済み
+                            </span>
+                        </td>
+
+                        <td th:text="${app.appliedDate}">2026-03-26</td>
+
+                        <td>
+                            <span th:if="${app.nextActionAt != null}"
+                                  th:text="${#temporals.format(app.nextActionAt, 'yyyy-MM-dd HH:mm')}">
+                                2026-03-26 14:00
+                            </span>
+                            <span th:if="${app.nextActionAt == null}">-</span>
+                        </td>
+
+                        <td th:text="${#temporals.format(app.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-03-26</td>
+
+                        <td>
+                            <div class="inline-actions">
+                                <a class="text-link"
+                                   th:href="@{/applications/{id}/status(id=${app.id}, status='WEB_TEST')}">Webテスト</a>
+                                <a class="text-link"
+                                   th:href="@{/applications/{id}/status(id=${app.id}, status='DOCUMENT_PASS')}">書類通過</a>
+                                <a class="text-link"
+                                   th:href="@{/applications/{id}/status(id=${app.id}, status='INTERVIEW_1')}">一次面接</a>
+                                <a class="text-link"
+                                   th:href="@{/applications/{id}/status(id=${app.id}, status='REJECT')}">見送り</a>
+                            </div>
+                        </td>
+
+                        <td>
+                            <a class="text-link" th:href="@{/activities}">
+                                履歴を見る
+                            </a>
+                        </td>
+
+                        <td>
+                            <a class="text-link" th:href="@{/applications/{id}(id=${app.id})}">
+                                詳細
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty-box" th:if="${applications == null or #lists.isEmpty(applications)}">
+                まだ応募はありません。
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

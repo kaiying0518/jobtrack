@@ -1,0 +1,6 @@
+#FileLock
+#Tue Mar 31 23:41:37 JST 2026
+hostName=192.168.0.102
+id=19d4457cb6a8073bc4a19b2f0401649485663dcaf3f
+method=file
+server=192.168.0.102\:50855

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>応募詳細</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand">JobTrack</div>
+        <nav class="nav-group">
+            <a class="nav-link" th:href="@{/dashboard}">ホーム</a>
+            <a class="nav-link active" th:href="@{/applications}">応募一覧</a>
+            <a class="nav-link" th:href="@{/activities}">活動記録</a>
+            <a class="nav-link" th:href="@{/reflections}">振り返り</a>
+            <a class="nav-link" th:href="@{/settings}">設定</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h1 class="page-title"
+                    th:text="${jobApplication.companyName != null and !#strings.isEmpty(jobApplication.companyName) ? jobApplication.companyName : '未設定'}">
+                    会社名
+                </h1>
+                <p class="page-desc">
+                    <span th:text="${jobApplication.positionName != null and !#strings.isEmpty(jobApplication.positionName) ? jobApplication.positionName : '未設定'}">
+                        職種
+                    </span>
+                    ・
+                    <span th:text="${jobApplication.channel != null and !#strings.isEmpty(jobApplication.channel) ? jobApplication.channel : '未設定'}">
+                        応募した方法
+                    </span>
+                </p>
+            </div>
+
+            <div class="topbar-actions">
+                <a class="btn btn-secondary" th:href="@{/applications}">応募一覧に戻る</a>
+                <a class="btn btn-primary" th:href="@{/applications/{id}/edit(id=${applicationId})}">内容を編集する</a>
+
+                <form th:action="@{/applications/{id}/delete(id=${applicationId})}"
+                      method="post"
+                      style="display:inline;"
+                      onsubmit="return confirm('この応募情報を削除しますか？');">
+                    <button type="submit" class="btn btn-danger">削除する</button>
+                </form>
+            </div>
+        </div>
+
+        <section class="grid-2">
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">基本情報</h2>
+                    <span class="badge"
+                          th:text="${jobApplication.currentStatus == null ? '未設定' : (jobApplication.currentStatus.name() == 'WEB_TEST' ? 'Webテスト' : jobApplication.currentStatus)}"
+                          th:classappend="
+                            ${jobApplication.currentStatus == null} ? ' badge-withdrawn' :
+                            (${jobApplication.currentStatus.name() == 'APPLIED'} ? ' badge-applied' :
+                            (${jobApplication.currentStatus.name() == 'WEB_TEST'} ? ' badge-doc-pass' :
+                            (${jobApplication.currentStatus.name() == 'DOCUMENT_PASS'} ? ' badge-doc-pass' :
+                            (${jobApplication.currentStatus.name() == 'INTERVIEW_1' or jobApplication.currentStatus.name() == 'INTERVIEW_2' or jobApplication.currentStatus.name() == 'FINAL_INTERVIEW'} ? ' badge-interview' :
+                            (${jobApplication.currentStatus.name() == 'OFFER'} ? ' badge-offer' :
+                            (${jobApplication.currentStatus.name() == 'REJECT'} ? ' badge-reject' : ' badge-withdrawn'))))))">
+                        未設定
+                    </span>
+                </div>
+
+                <div th:if="${inactiveReminder}" style="margin-bottom: 12px;">
+                    <span class="badge" style="opacity: 0.7;">2週間更新なし</span>
+                </div>
+
+                <div class="info-list">
+                    <div class="info-item">
+                        <div class="info-label">会社名</div>
+                        <div class="info-value"
+                             th:text="${jobApplication.companyName != null and !#strings.isEmpty(jobApplication.companyName) ? jobApplication.companyName : '未設定'}">
+                            未設定
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">応募した職種</div>
+                        <div class="info-value"
+                             th:text="${jobApplication.positionName != null and !#strings.isEmpty(jobApplication.positionName) ? jobApplication.positionName : '未設定'}">
+                            未設定
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">応募した方法</div>
+                        <div class="info-value"
+                             th:text="${jobApplication.channel != null and !#strings.isEmpty(jobApplication.channel) ? jobApplication.channel : '未設定'}">
+                            未設定
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">応募した日</div>
+                        <div class="info-value"
+                             th:text="${jobApplication.appliedDate != null ? jobApplication.appliedDate : '未設定'}">
+                            未設定
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">次の予定</div>
+                        <div class="info-value">
+                            <span th:if="${jobApplication.nextActionAt != null}"
+                                  th:text="${#temporals.format(jobApplication.nextActionAt, 'yyyy-MM-dd HH:mm')}">
+                            </span>
+                            <span th:if="${jobApplication.nextActionAt == null}">未設定</span>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">使った履歴書</div>
+                        <div class="info-value"
+                             th:text="${jobApplication.resumeVersion != null and !#strings.isEmpty(jobApplication.resumeVersion) ? jobApplication.resumeVersion : '未設定'}">
+                            未設定
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">最後に更新した日</div>
+                        <div class="info-value"
+                             th:text="${jobApplication.updatedAt != null ? #temporals.format(jobApplication.updatedAt, 'yyyy-MM-dd HH:mm') : '未設定'}">
+                            未設定
+                        </div>
+                    </div>
+
+                    <div class="info-item"
+                         style="grid-column: 1 / -1;"
+                         th:if="${jobApplication.jobUrl != null and !#strings.isEmpty(jobApplication.jobUrl)}">
+                        <div class="info-label">求人ページ</div>
+                        <div class="info-value">
+                            <a class="text-link"
+                               th:href="${jobApplication.jobUrl}"
+                               th:text="${jobApplication.jobUrl}"
+                               target="_blank"></a>
+                        </div>
+                    </div>
+
+                    <div class="info-item"
+                         style="grid-column: 1 / -1;"
+                         th:if="${jobApplication.memo != null and !#strings.isEmpty(jobApplication.memo)}">
+                        <div class="info-label">メモ・気づいたこと</div>
+                        <div class="info-value" th:text="${jobApplication.memo}"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">状況を更新する</h2>
+                </div>
+
+                <div class="status-action-group">
+                    <a class="status-action-btn" th:href="@{/applications/{id}/status(id=${applicationId}, status='APPLIED')}">応募済み</a>
+                    <a class="status-action-btn" th:href="@{/applications/{id}/status(id=${applicationId}, status='WEB_TEST')}">Webテスト</a>
+                    <a class="status-action-btn" th:href="@{/applications/{id}/status(id=${applicationId}, status='DOCUMENT_PASS')}">書類通過</a>
+                    <a class="status-action-btn" th:href="@{/applications/{id}/status(id=${applicationId}, status='INTERVIEW_1')}">一次面接へ進む</a>
+                    <a class="status-action-btn" th:href="@{/applications/{id}/status(id=${applicationId}, status='INTERVIEW_2')}">二次面接へ進む</a>
+                    <a class="status-action-btn" th:href="@{/applications/{id}/status(id=${applicationId}, status='FINAL_INTERVIEW')}">最終面接へ進む</a>
+                    <a class="status-action-btn" th:href="@{/applications/{id}/status(id=${applicationId}, status='OFFER')}">内定</a>
+                    <a class="status-action-btn" th:href="@{/applications/{id}/status(id=${applicationId}, status='REJECT')}">見送り</a>
+                    <a class="status-action-btn" th:href="@{/applications/{id}/status(id=${applicationId}, status='WITHDRAWN')}">辞退</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-title-row">
+                <h2 class="card-title">採用ページ・ログイン情報</h2>
+            </div>
+
+            <div class="portal-grid" th:if="${portalInfos != null and !#lists.isEmpty(portalInfos)}">
+                <div class="portal-card" th:each="portal : ${portalInfos}">
+                    <div class="portal-title"
+                         th:text="${portal.portalName != null and !#strings.isEmpty(portal.portalName) ? portal.portalName : '採用ページ名未設定'}">
+                        採用ページ名未設定
+                    </div>
+
+                    <div class="portal-row">
+                        <div class="portal-label">ログインページ</div>
+                        <div class="portal-value">
+                            <span th:if="${portal.portalUrl == null or #strings.isEmpty(portal.portalUrl)}">未設定</span>
+                            <a class="text-link"
+                               th:if="${portal.portalUrl != null and !#strings.isEmpty(portal.portalUrl)}"
+                               th:href="${portal.portalUrl}"
+                               th:text="${portal.portalUrl}"
+                               target="_blank"></a>
+                        </div>
+                    </div>
+
+                    <div class="portal-row">
+                        <div class="portal-label">ログインID</div>
+                        <div class="portal-value"
+                             th:text="${portal.loginId != null and !#strings.isEmpty(portal.loginId) ? portal.loginId : '未設定'}">
+                            未設定
+                        </div>
+                    </div>
+
+                    <div class="portal-row">
+                        <div class="portal-label">補足メモ</div>
+                        <div class="portal-value"
+                             th:text="${portal.loginMemo != null and !#strings.isEmpty(portal.loginMemo) ? portal.loginMemo : '未設定'}">
+                            未設定
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="empty-box" th:if="${portalInfos == null or #lists.isEmpty(portalInfos)}">
+                まだ登録されていません。
+            </div>
+        </section>
+
+        <section class="grid-2">
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">これまでの流れ</h2>
+                    <span class="card-subtext">進捗やメモの履歴です</span>
+                </div>
+
+                <div class="timeline" th:if="${activityLogs != null and !#lists.isEmpty(activityLogs)}">
+                    <div class="timeline-item" th:each="log : ${activityLogs}">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date" th:text="${#temporals.format(log.actionDate, 'yyyy-MM-dd HH:mm')}">
+                                2026-03-26 10:45
+                            </div>
+
+                            <div class="timeline-title">
+                                <span th:switch="${log.actionType}">
+                                    <span th:case="'APPLY'">応募を追加</span>
+                                    <span th:case="'STATUS_UPDATE'">進捗を更新</span>
+                                    <span th:case="'PORTAL_UPDATE'">採用ページ情報を更新</span>
+                                    <span th:case="'MEMO_UPDATE'">メモを更新</span>
+                                    <span th:case="*" th:text="${log.actionType}">更新</span>
+                                </span>
+                            </div>
+
+                            <div class="timeline-text"
+                                 th:if="${log.note != null and !#strings.isEmpty(log.note)}"
+                                 th:text="${log.note}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="empty-box" th:if="${activityLogs == null or #lists.isEmpty(activityLogs)}">
+                    まだ記録はありません。
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">メモ・気づいたこと</h2>
+                </div>
+                <div class="note-box"
+                     th:text="${jobApplication.memo != null and !#strings.isEmpty(jobApplication.memo) ? jobApplication.memo : 'まだメモはありません。'}">
+                    メモ
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

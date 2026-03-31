@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>活動記録</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">JobTrack</div>
+            <nav class="nav-group">
+                <a class="nav-link" th:href="@{/dashboard}">ホーム</a>
+                <a class="nav-link" th:href="@{/applications}">応募一覧</a>
+                <a class="nav-link active" th:href="@{/activities}">活動記録</a>
+                <a class="nav-link" th:href="@{/reflections}">振り返り</a>
+                <a class="nav-link" th:href="@{/settings}">設定</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="topbar">
+                <div>
+                    <h1 class="page-title">活動記録</h1>
+                    <p class="page-desc">応募したことや進捗の変化を、順番に見返せます。</p>
+                </div>
+            </div>
+
+            <section class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">条件で絞り込む</h2>
+                    <span class="card-subtext">会社名や内容で探せます</span>
+                </div>
+
+                <form class="filter-bar" th:action="@{/activities}" method="get">
+                    <input class="input" type="text" name="keyword" th:value="${keyword}" placeholder="会社名で検索">
+
+                    <select class="select" name="actionType">
+                        <option value="">すべての記録</option>
+                        <option value="APPLY" th:selected="${actionType == 'APPLY'}">応募を追加</option>
+                        <option value="STATUS_UPDATE" th:selected="${actionType == 'STATUS_UPDATE'}">進捗を更新</option>
+                        <option value="PORTAL_UPDATE" th:selected="${actionType == 'PORTAL_UPDATE'}">採用ページ情報を更新</option>
+                        <option value="MEMO_UPDATE" th:selected="${actionType == 'MEMO_UPDATE'}">メモを更新</option>
+                    </select>
+
+                    <input class="input" type="date" name="fromDate" th:value="${fromDate}">
+                    <input class="input" type="date" name="toDate" th:value="${toDate}">
+
+                    <button class="btn btn-secondary" type="submit">絞り込む</button>
+                </form>
+            </section>
+
+            <section class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">これまでの流れ</h2>
+                    <span class="card-subtext">
+                        <span th:text="${activityLogs != null ? #lists.size(activityLogs) : 0}">0</span> 件の記録
+                    </span>
+                </div>
+
+                <div class="timeline" th:if="${activityLogs != null and !#lists.isEmpty(activityLogs)}">
+                    <div class="timeline-item" th:each="log : ${activityLogs}">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date"
+                                th:text="${#temporals.format(log.actionDate, 'yyyy-MM-dd HH:mm')}">
+                                2026-03-26 10:45
+                            </div>
+
+                            <div class="timeline-title">
+                                <span th:text="${log.application != null ? log.application.companyName : '会社名なし'}">
+                                    MICIN
+                                </span>
+                                ・
+                                <span th:switch="${log.actionType}">
+                                    <span th:case="'APPLY'">応募を追加</span>
+                                    <span th:case="'STATUS_UPDATE'">進捗を更新</span>
+                                    <span th:case="'PORTAL_UPDATE'">採用ページ情報を更新</span>
+                                    <span th:case="'MEMO_UPDATE'">メモを更新</span>
+                                    <span th:case="*" th:text="${log.actionType}">更新</span>
+                                </span>
+                            </div>
+
+                            <div class="timeline-text" th:if="${log.note != null and !#strings.isEmpty(log.note)}"
+                                th:text="${log.note}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="empty-box" th:if="${activityLogs == null or #lists.isEmpty(activityLogs)}">
+                    まだ記録はありません。
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新しく応募を追加</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand">JobTrack</div>
+        <nav class="nav-group">
+            <a class="nav-link" th:href="@{/dashboard}">ホーム</a>
+            <a class="nav-link active" th:href="@{/applications}">応募一覧</a>
+            <a class="nav-link" th:href="@{/activities}">活動記録</a>
+            <a class="nav-link" th:href="@{/reflections}">振り返り</a>
+            <a class="nav-link" th:href="@{/settings}">設定</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h1 class="page-title"
+                    th:text="${applicationId != null} ? '応募内容を編集' : '新しく応募を追加'">
+                    新しく応募を追加
+                </h1>
+                <p class="page-desc">最低限の情報だけでOKです。あとから追記できます。</p>
+            </div>
+            <div class="topbar-actions">
+                <a class="btn btn-secondary" th:href="@{/applications}">一覧に戻る</a>
+            </div>
+        </div>
+
+        <div th:if="${errorMessage}" class="card" style="margin-bottom: 16px;">
+            <p th:text="${errorMessage}" style="margin: 0; color: #b91c1c; font-weight: 600;"></p>
+        </div>
+
+		<form th:action="${applicationId != null} ? @{/applications/{id}/edit(id=${applicationId})} : @{/applications}"
+		      method="post"
+		      th:object="${application}">
+
+		    <input type="hidden" th:field="*{id}">
+
+		    <section class="grid-2">
+
+		        <div class="card">
+		            <div class="card-title-row">
+		                <h2 class="card-title">基本情報</h2>
+		            </div>
+
+		            <div class="info-list">
+		                <div class="info-item">
+		                    <label class="info-label">会社名</label>
+		                    <input class="input" type="text" th:field="*{companyName}" placeholder="例：花王" required>
+		                </div>
+
+		                <div class="info-item">
+		                    <label class="info-label">職種</label>
+		                    <input class="input" type="text" th:field="*{positionName}" placeholder="例：Backend Engineer">
+		                </div>
+
+		                <div class="info-item">
+		                    <label class="info-label">応募した方法</label>
+		                    <select class="select" th:field="*{channel}">
+		                        <option value="">選択してください</option>
+		                        <option value="DIRECT">企業サイトから直接応募</option>
+		                        <option value="JOB_SITE">求人サイト</option>
+		                        <option value="AGENT">エージェント</option>
+		                        <option value="SCOUT">スカウト</option>
+		                        <option value="OTHER">その他</option>
+		                    </select>
+		                </div>
+
+		                <div class="info-item">
+		                    <label class="info-label">履歴書バージョン</label>
+		                    <input class="input" type="text" th:field="*{resumeVersion}" placeholder="例：職務経歴書 v3">
+		                </div>
+
+		                <div class="info-item">
+		                    <label class="info-label">今の状況</label>
+		                    <select class="select" th:field="*{currentStatus}">
+		                        <option value="APPLIED">応募済み</option>
+		                        <option value="WEB_TEST">WEBテスト</option>
+		                        <option value="DOCUMENT_PASS">書類通過</option>
+		                        <option value="INTERVIEW_1">一次面接</option>
+		                        <option value="INTERVIEW_2">二次面接</option>
+		                        <option value="FINAL_INTERVIEW">最終面接</option>
+		                        <option value="OFFER">内定</option>
+		                        <option value="REJECT">見送り</option>
+		                        <option value="WITHDRAWN">辞退</option>
+		                    </select>
+		                </div>
+
+		                <div class="info-item">
+		                    <label class="info-label">応募日</label>
+		                    <input class="input" type="date" th:field="*{appliedDate}">
+		                </div>
+
+		                <div class="info-item">
+		                    <label class="info-label">次の予定</label>
+		                    <input class="input" type="datetime-local" th:field="*{nextActionAt}">
+		                </div>
+
+		                <div class="info-item" style="grid-column: 1 / -1;">
+		                    <label class="info-label">求人ページ</label>
+		                    <input class="input" type="text" th:field="*{jobUrl}" placeholder="https://...">
+		                </div>
+
+		                <div class="info-item" style="grid-column: 1 / -1;">
+		                    <label class="info-label">メモ（任意）</label>
+		                    <textarea class="textarea" th:field="*{memo}" placeholder="気になったこと、印象など"></textarea>
+		                </div>
+		            </div>
+		        </div>
+
+		        <div>
+		            <div class="card" style="margin-bottom: 16px;">
+		                <div class="card-title-row">
+		                    <h2 class="card-title">採用ページ情報（任意）</h2>
+		                </div>
+
+		                <div class="info-list">
+		                    <div class="info-item">
+		                        <label class="info-label">システム名</label>
+		                        <select class="select" name="portalName">
+		                            <option value="">選択してください</option>
+		                            <option value="HERP">HERP</option>
+		                            <option value="Talentio">Talentio</option>
+		                            <option value="HRMOS">HRMOS</option>
+		                            <option value="MyPage">MyPage</option>
+		                            <option value="自社採用ページ">自社採用ページ</option>
+		                        </select>
+		                    </div>
+
+		                    <div class="info-item">
+		                        <label class="info-label">ログインID</label>
+		                        <input class="input" name="loginId" type="text">
+		                    </div>
+
+		                    <div class="info-item" style="grid-column: 1 / -1;">
+		                        <label class="info-label">ログインページ</label>
+		                        <input class="input" name="portalUrl" type="text" placeholder="https://...">
+		                    </div>
+
+		                    <div class="info-item" style="grid-column: 1 / -1;">
+		                        <label class="info-label">メモ</label>
+		                        <textarea class="textarea" name="loginMemo"></textarea>
+		                    </div>
+		                </div>
+		            </div>
+
+		            <div class="card">
+		                <div class="card-title-row">
+		                    <h2 class="card-title">保存</h2>
+		                </div>
+
+		                <div class="topbar-actions" style="margin-top: 8px;">
+		                    <button class="btn btn-primary" type="submit">保存する</button>
+		                </div>
+		            </div>
+		        </div>
+
+		    </section>
+		</form>
+    </main>
+</div>
+</body>
+</html>

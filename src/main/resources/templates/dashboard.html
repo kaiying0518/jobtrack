@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ホーム</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand">JobTrack</div>
+        <nav class="nav-group">
+            <a class="nav-link active" th:href="@{/dashboard}">ホーム</a>
+            <a class="nav-link" th:href="@{/applications}">応募一覧</a>
+            <a class="nav-link" th:href="@{/activities}">活動記録</a>
+            <a class="nav-link" th:href="@{/reflections}">振り返り</a>
+            <a class="nav-link" th:href="@{/settings}">設定</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h1 class="page-title">総覧</h1>
+                <p class="page-desc">
+                    応募状況をまとめて確認できます。
+                </p>
+            </div>
+            <div class="topbar-actions">
+                <a class="btn btn-secondary" th:href="@{/applications}">応募一覧を見る</a>
+                <a class="btn btn-primary" th:href="@{/applications/new}">＋ 新規応募</a>
+            </div>
+        </div>
+
+        <section class="grid-4">
+            <div class="card stat-card">
+                <div class="stat-label">総応募数</div>
+                <div class="stat-value" th:text="${totalCount}">0</div>
+                <div class="stat-sub">今週 <span th:text="${weeklyApplyCount}">0</span></div>
+            </div>
+
+            <div class="card stat-card">
+                <div class="stat-label">WEBテスト / 書類通過</div>
+                <div class="stat-value">
+                    <span th:text="${webTestCount}">0</span> /
+                    <span th:text="${documentPassCount}">0</span>
+                </div>
+                <div class="stat-sub">
+                    書類通過率 <span th:text="${documentPassRate}">0%</span>
+                </div>
+            </div>
+
+            <div class="card stat-card">
+                <div class="stat-label">面接中</div>
+                <div class="stat-value" th:text="${interviewCount}">0</div>
+                <div class="stat-sub" th:text="${interviewBreakdown}">一次 0 / 最終 0</div>
+            </div>
+
+            <div class="card stat-card">
+                <div class="stat-label">内定 / 見送り</div>
+                <div class="stat-value">
+                    <span th:text="${offerCount}">0</span> /
+                    <span th:text="${rejectCount}">0</span>
+                </div>
+                <div class="stat-sub">辞退 <span th:text="${withdrawnCount}">0</span></div>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-title-row">
+               <h2 class="card-title">すぐできること</h2>
+               <span class="card-subtext">よく使う操作</span>
+            </div>
+            <div class="quick-actions">
+                <a class="quick-action" th:href="@{/applications/new}">
+                    <div class="quick-action-title">新しい応募を追加</div>
+                    <div class="quick-action-desc">
+                        会社名・職種・応募経由を中心にすばやく追加。
+                    </div>
+                </a>
+                <a class="quick-action" th:href="@{/applications}">
+                    <div class="quick-action-title">進捗を更新</div>
+                    <div class="quick-action-desc">
+                        書類通過・面接・内定などを一覧から更新。
+                    </div>
+                </a>
+                <a class="quick-action" th:href="@{/reflections}">
+                    <div class="quick-action-title">振り返りを見る</div>
+                    <div class="quick-action-desc">
+                        最近の傾向を確認。
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <section class="grid-2">
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">最近更新した応募</h2>
+                    <a class="text-link" th:href="@{/applications}">すべて見る</a>
+                </div>
+
+                <div class="mini-list" th:if="${recentApplications != null and !#lists.isEmpty(recentApplications)}">
+                    <div class="mini-item" th:each="app : ${recentApplications}">
+                        <div>
+                            <div class="mini-title" th:text="${app.companyName}">会社名</div>
+                            <div class="mini-sub">
+                                <span th:text="${app.positionName}">職種</span>
+                                ·
+                                <span th:text="${app.channel}">応募経由</span>
+                            </div>
+                        </div>
+
+                        <span class="badge"
+                              th:text="
+                                ${app.currentStatus.name() == 'APPLIED'} ? '応募済み' :
+                                (${app.currentStatus.name() == 'WEB_TEST'} ? 'WEBテスト' :
+                                (${app.currentStatus.name() == 'DOCUMENT_PASS'} ? '書類通過' :
+                                (${app.currentStatus.name() == 'INTERVIEW_1'} ? '一次面接' :
+                                (${app.currentStatus.name() == 'INTERVIEW_2'} ? '二次面接' :
+                                (${app.currentStatus.name() == 'FINAL_INTERVIEW'} ? '最終面接' :
+                                (${app.currentStatus.name() == 'OFFER'} ? '内定' :
+                                (${app.currentStatus.name() == 'REJECT'} ? '見送り' : '辞退')))))))"
+                              th:classappend="
+                                ${app.currentStatus.name() == 'APPLIED'} ? ' badge-applied' :
+                                (${app.currentStatus.name() == 'WEB_TEST'} ? ' badge-web-test' :
+                                (${app.currentStatus.name() == 'DOCUMENT_PASS'} ? ' badge-doc-pass' :
+                                (${app.currentStatus.name() == 'INTERVIEW_1' or app.currentStatus.name() == 'INTERVIEW_2' or app.currentStatus.name() == 'FINAL_INTERVIEW'} ? ' badge-interview' :
+                                (${app.currentStatus.name() == 'OFFER'} ? ' badge-offer' :
+                                (${app.currentStatus.name() == 'REJECT'} ? ' badge-reject' : ' badge-withdrawn')))))">
+                            応募済み
+                        </span>
+                    </div>
+                </div>
+
+                <div class="empty-box" th:if="${recentApplications == null or #lists.isEmpty(recentApplications)}">
+                    まだ応募データがありません。
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">簡単フィードバック</h2>
+                    <span class="card-subtext">次に何をするかのヒント</span>
+                </div>
+
+                <div class="notice-list" th:if="${reflectionMessages != null and !#lists.isEmpty(reflectionMessages)}">
+                    <div th:each="msg : ${reflectionMessages}"
+                         class="notice-item"
+                         th:text="${msg}">
+                        フィードバック
+                    </div>
+                </div>
+
+                <div class="empty-box" th:if="${reflectionMessages == null or #lists.isEmpty(reflectionMessages)}">
+                    まだフィードバックはありません。
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>設定</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">JobTrack</div>
+            <nav class="nav-group">
+                <a class="nav-link" th:href="@{/dashboard}">ホーム</a>
+                <a class="nav-link" th:href="@{/applications}">応募一覧</a>
+                <a class="nav-link" th:href="@{/activities}">活動記録</a>
+                <a class="nav-link" th:href="@{/reflections}">振り返り</a>
+                <a class="nav-link active" th:href="@{/settings}">設定</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="topbar">
+                <div>
+                    <h1 class="page-title">設定</h1>
+                    <p class="page-desc">基本設定、初期値、データ管理をまとめます。</p>
+                </div>
+            </div>
+
+			<div th:if="${successMessage}"
+			     th:text="${successMessage}"
+			     style="margin: 16px 0 20px;
+			            padding: 16px 20px;
+			            border-radius: 12px;
+			            background: #e8f7ee;
+			            border-left: 6px solid #2e9f5b;
+			            color: #1f6f43;
+			            font-size: 18px;
+			            font-weight: 700;
+			            box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+			    設定を保存しました
+			</div>
+
+            <section class="grid-2">
+                <div class="card">
+                    <div class="card-title-row">
+                        <h2 class="card-title">初期設定</h2>
+                    </div>
+
+                    <form th:action="@{/settings}" th:object="${settings}" method="post">
+                        <div class="info-list">
+                            <div class="info-item">
+                                <label class="info-label" for="defaultResumeVersion">よく使う履歴書</label>
+                                <input class="input" id="defaultResumeVersion" type="text"
+                                       th:field="*{defaultResumeVersion}" placeholder="例：職務経歴書 v3">
+                            </div>
+
+                            <div class="info-item">
+                                <label class="info-label" for="defaultStatus">最初の状況</label>
+                                <select class="select" id="defaultStatus" th:field="*{defaultStatus}">
+                                    <option th:each="status : ${statuses}" th:value="${status}" th:text="${
+                                                   status.name() == 'APPLIED' ? '応募済み' :
+                                                   status.name() == 'WEB_TEST' ? 'WEBテスト' :
+                                                   status.name() == 'DOCUMENT_PASS' ? '書類通過' :
+                                                   status.name() == 'INTERVIEW_1' ? '一次面接' :
+                                                   status.name() == 'INTERVIEW_2' ? '二次面接' :
+                                                   status.name() == 'FINAL_INTERVIEW' ? '最終面接' :
+                                                   status.name() == 'OFFER' ? '内定' :
+                                                   status.name() == 'REJECT' ? '不採用' :
+                                                   status.name() == 'WITHDRAWN' ? '辞退' :
+                                                   status
+                                               }">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="info-item">
+                                <label class="info-label" for="useTodayAsDefault">応募日を今日にする</label>
+                                <select class="select" id="useTodayAsDefault" th:field="*{useTodayAsDefault}">
+                                    <option th:value="true">はい</option>
+                                    <option th:value="false">いいえ</option>
+                                </select>
+                            </div>
+
+                            <div class="info-item">
+                                <label class="info-label" for="defaultChannel">応募した方法</label>
+                                <select class="select" id="defaultChannel" th:field="*{defaultChannel}">
+                                    <option value="">選択してください</option>
+                                    <option value="DIRECT">企業サイトから直接応募</option>
+                                    <option value="JOB_SITE">求人サイト（Mynavi・Rikunaviなど）</option>
+                                    <option value="AGENT">エージェント経由</option>
+                                    <option value="SCOUT">スカウト</option>
+                                    <option value="OTHER">その他</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="topbar-actions" style="margin-top: 16px;">
+                            <button class="btn btn-primary" type="submit">保存する</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-title-row">
+                        <h2 class="card-title">データ管理</h2>
+                        <span class="card-subtext">データ出力など</span>
+                    </div>
+
+                    <div class="mini-list">
+                        <div class="mini-item">
+                            <div>
+                                <div class="mini-title">CSV出力</div>
+                                <div class="mini-sub">応募一覧をCSVで出力</div>
+                            </div>
+                            <a class="btn btn-secondary" th:href="@{/settings/export/csv}">出力</a>
+                        </div>
+
+                        <div class="mini-item">
+                            <div>
+                                <div class="mini-title">応募を削除する</div>
+                                <div class="mini-sub">不要な応募は応募一覧ページから削除できます</div>
+                            </div>
+                            <a class="btn btn-secondary" th:href="@{/applications}">応募一覧へ</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>

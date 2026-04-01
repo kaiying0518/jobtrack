@@ -113,15 +113,7 @@
                         </div>
 
                         <span class="badge"
-                              th:text="
-                                ${app.currentStatus.name() == 'APPLIED'} ? '応募済み' :
-                                (${app.currentStatus.name() == 'WEB_TEST'} ? 'WEBテスト' :
-                                (${app.currentStatus.name() == 'DOCUMENT_PASS'} ? '書類通過' :
-                                (${app.currentStatus.name() == 'INTERVIEW_1'} ? '一次面接' :
-                                (${app.currentStatus.name() == 'INTERVIEW_2'} ? '二次面接' :
-                                (${app.currentStatus.name() == 'FINAL_INTERVIEW'} ? '最終面接' :
-                                (${app.currentStatus.name() == 'OFFER'} ? '内定' :
-                                (${app.currentStatus.name() == 'REJECT'} ? '見送り' : '辞退')))))))"
+                              th:text="${app.currentStatus == null ? '未設定' : app.currentStatus.label}"
                               th:classappend="
                                 ${app.currentStatus.name() == 'APPLIED'} ? ' badge-applied' :
                                 (${app.currentStatus.name() == 'WEB_TEST'} ? ' badge-web-test' :

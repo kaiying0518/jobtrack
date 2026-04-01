@@ -31,9 +31,14 @@
                         職種
                     </span>
                     ・
-                    <span th:text="${jobApplication.channel != null and !#strings.isEmpty(jobApplication.channel) ? jobApplication.channel : '未設定'}">
-                        応募した方法
-                    </span>
+					<span th:text="
+					    ${jobApplication.channel == null or #strings.isEmpty(jobApplication.channel)} ? '未設定' :
+					    (${jobApplication.channel == 'JOB_SITE'} ? '求人サイト' :
+					    (${jobApplication.channel == 'AGENT'} ? 'エージェント' :
+					    (${jobApplication.channel == 'SCOUT'} ? 'スカウト' :
+					    (${jobApplication.channel == 'DIRECT'} ? '直接応募' : jobApplication.channel))))">
+					    応募した方法
+					</span>
                 </p>
             </div>
 
@@ -54,18 +59,18 @@
             <div class="card">
                 <div class="card-title-row">
                     <h2 class="card-title">基本情報</h2>
-                    <span class="badge"
-                          th:text="${jobApplication.currentStatus == null ? '未設定' : (jobApplication.currentStatus.name() == 'WEB_TEST' ? 'Webテスト' : jobApplication.currentStatus)}"
-                          th:classappend="
-                            ${jobApplication.currentStatus == null} ? ' badge-withdrawn' :
-                            (${jobApplication.currentStatus.name() == 'APPLIED'} ? ' badge-applied' :
-                            (${jobApplication.currentStatus.name() == 'WEB_TEST'} ? ' badge-doc-pass' :
-                            (${jobApplication.currentStatus.name() == 'DOCUMENT_PASS'} ? ' badge-doc-pass' :
-                            (${jobApplication.currentStatus.name() == 'INTERVIEW_1' or jobApplication.currentStatus.name() == 'INTERVIEW_2' or jobApplication.currentStatus.name() == 'FINAL_INTERVIEW'} ? ' badge-interview' :
-                            (${jobApplication.currentStatus.name() == 'OFFER'} ? ' badge-offer' :
-                            (${jobApplication.currentStatus.name() == 'REJECT'} ? ' badge-reject' : ' badge-withdrawn'))))))">
-                        未設定
-                    </span>
+					<span class="badge"
+					      th:text="${jobApplication.currentStatus == null ? '未設定' : jobApplication.currentStatus.label}"
+					      th:classappend="
+					        ${jobApplication.currentStatus == null} ? ' badge-withdrawn' :
+					        (${jobApplication.currentStatus.name() == 'APPLIED'} ? ' badge-applied' :
+					        (${jobApplication.currentStatus.name() == 'WEB_TEST'} ? ' badge-doc-pass' :
+					        (${jobApplication.currentStatus.name() == 'DOCUMENT_PASS'} ? ' badge-doc-pass' :
+					        (${jobApplication.currentStatus.name() == 'INTERVIEW_1' or jobApplication.currentStatus.name() == 'INTERVIEW_2' or jobApplication.currentStatus.name() == 'FINAL_INTERVIEW'} ? ' badge-interview' :
+					        (${jobApplication.currentStatus.name() == 'OFFER'} ? ' badge-offer' :
+					        (${jobApplication.currentStatus.name() == 'REJECT'} ? ' badge-reject' : ' badge-withdrawn'))))))">
+					    未設定
+					</span>
                 </div>
 
                 <div th:if="${inactiveReminder}" style="margin-bottom: 12px;">
@@ -91,10 +96,15 @@
 
                     <div class="info-item">
                         <div class="info-label">応募した方法</div>
-                        <div class="info-value"
-                             th:text="${jobApplication.channel != null and !#strings.isEmpty(jobApplication.channel) ? jobApplication.channel : '未設定'}">
-                            未設定
-                        </div>
+						<div class="info-value"
+						     th:text="
+						        ${jobApplication.channel == null or #strings.isEmpty(jobApplication.channel)} ? '未設定' :
+						        (${jobApplication.channel == 'JOB_SITE'} ? '求人サイト' :
+						        (${jobApplication.channel == 'AGENT'} ? 'エージェント' :
+						        (${jobApplication.channel == 'SCOUT'} ? 'スカウト' :
+						        (${jobApplication.channel == 'DIRECT'} ? '直接応募' : jobApplication.channel))))">
+						    未設定
+						</div>
                     </div>
 
                     <div class="info-item">

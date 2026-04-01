@@ -63,7 +63,74 @@
                 まだ振り返れる内容がありません。
             </div>
         </section>
+
+        <section class="card">
+            <div class="card-title-row">
+                <h2 class="card-title">AIサマリー</h2>
+                <span class="card-subtext">応募状況をもとに、振り返りの要点を整理します</span>
+            </div>
+
+            <p class="page-desc" style="margin-top: 0;">
+                AI連携は未実装です。
+            </p>
+
+            <div style="margin-top: 12px;">
+                <button type="button" id="generate-ai-summary-btn" class="btn btn-primary">
+                    AIで振り返りを生成
+                </button>
+            </div>
+
+            <div id="ai-summary-loading" class="card-subtext" style="margin-top: 12px; display: none;">
+                生成中...
+            </div>
+
+            <div id="ai-summary-result"
+                 class="empty-box"
+                 style="margin-top: 12px; white-space: pre-line;">
+                まだAIサマリーは生成されていません。
+            </div>
+        </section>
     </main>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const button = document.getElementById("generate-ai-summary-btn");
+    const loading = document.getElementById("ai-summary-loading");
+    const result = document.getElementById("ai-summary-result");
+
+    if (!button || !loading || !result) {
+        return;
+    }
+
+    button.addEventListener("click", async function () {
+        button.disabled = true;
+        loading.style.display = "block";
+        result.textContent = "";
+
+        try {
+            const response = await fetch("/reflections/ai-summary", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error("request failed");
+            }
+
+            const data = await response.json();
+            result.textContent = data.summary ?? "AIサマリーを取得できませんでした。";
+        } catch (error) {
+            console.error(error);
+            result.textContent = "AIサマリーの生成に失敗しました。";
+        } finally {
+            loading.style.display = "none";
+            button.disabled = false;
+        }
+    });
+});
+</script>
 </body>
 </html>

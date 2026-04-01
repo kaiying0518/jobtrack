@@ -114,11 +114,18 @@
                             </div>
                         </td>
 
-                        <td th:text="${app.channel}">Direct</td>
+						<td th:text="
+						    ${app.channel == null or #strings.isEmpty(app.channel)} ? '未設定' :
+						    (${app.channel == 'JOB_SITE'} ? '求人サイト' :
+						    (${app.channel == 'AGENT'} ? 'エージェント' :
+						    (${app.channel == 'SCOUT'} ? 'スカウト' :
+						    (${app.channel == 'DIRECT'} ? '直接応募' : app.channel))))">
+						    応募方法
+						</td>
 
                         <td>
                             <span class="badge"
-                                  th:text="${app.currentStatus == 'WEB_TEST' ? 'Webテスト' : app.currentStatus}">
+                                 th:text="${app.currentStatus == null ? '未設定' : app.currentStatus.label}">
                                 応募済み
                             </span>
                         </td>

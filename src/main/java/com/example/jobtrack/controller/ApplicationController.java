@@ -27,190 +27,177 @@ import com.example.jobtrack.service.SettingsService;
 @RequestMapping("/applications")
 public class ApplicationController {
 
-    private final ApplicationService applicationService;
-    private final ActivityLogService activityLogService;
-    private final PortalInfoService portalInfoService;
-    private final SettingsService settingsService;
+	private final ApplicationService applicationService;
+	private final ActivityLogService activityLogService;
+	private final PortalInfoService portalInfoService;
+	private final SettingsService settingsService;
 
-    public ApplicationController(ApplicationService applicationService,
-                                 ActivityLogService activityLogService,
-                                 PortalInfoService portalInfoService,
-                                 SettingsService settingsService) {
-        this.applicationService = applicationService;
-        this.activityLogService = activityLogService;
-        this.portalInfoService = portalInfoService;
-        this.settingsService = settingsService;
-    }
+	public ApplicationController(ApplicationService applicationService,
+			ActivityLogService activityLogService,
+			PortalInfoService portalInfoService,
+			SettingsService settingsService) {
+		this.applicationService = applicationService;
+		this.activityLogService = activityLogService;
+		this.portalInfoService = portalInfoService;
+		this.settingsService = settingsService;
+	}
 
-    @GetMapping
-    public String list(@RequestParam(required = false) String keyword,
-                       @RequestParam(required = false) ApplicationStatus status,
-                       @RequestParam(required = false) String channel,
-                       @RequestParam(required = false, defaultValue = "updatedAt") String sort,
-                       Model model) {
+	@GetMapping
+	public String list(@RequestParam(required = false) String keyword,
+			@RequestParam(required = false) ApplicationStatus status,
+			@RequestParam(required = false) String channel,
+			@RequestParam(required = false, defaultValue = "updatedAt") String sort,
+			Model model) {
 
-        List<Application> applications = applicationService.search(keyword, status, channel, sort);
+		List<Application> applications = applicationService.search(keyword, status, channel, sort);
 
-        Map<Long, Boolean> inactiveReminderMap = new LinkedHashMap<>();
-        for (Application application : applications) {
-            inactiveReminderMap.put(
-                    application.getId(),
-                    applicationService.shouldShowInactiveReminder(application)
-            );
-        }
+		Map<Long, Boolean> inactiveReminderMap = new LinkedHashMap<>();
+		for (Application application : applications) {
+			inactiveReminderMap.put(
+					application.getId(),
+					applicationService.shouldShowInactiveReminder(application));
+		}
 
-        model.addAttribute("applications", applications);
-        model.addAttribute("inactiveReminderMap", inactiveReminderMap);
+		model.addAttribute("applications", applications);
+		model.addAttribute("inactiveReminderMap", inactiveReminderMap);
 
-        model.addAttribute("keyword", keyword);
-        model.addAttribute("status", status != null ? status.name() : "");
-        model.addAttribute("channel", channel);
-        model.addAttribute("sort", sort);
+		model.addAttribute("keyword", keyword);
+		model.addAttribute("status", status != null ? status.name() : "");
+		model.addAttribute("channel", channel);
+		model.addAttribute("sort", sort);
 
-        return "applications/list";
-    }
+		return "applications/list";
+	}
 
-    @GetMapping("/new")
-    public String newForm(Model model) {
-        Settings settings = settingsService.getSettings();
+	@GetMapping("/new")
+	public String newForm(Model model) {
+		Settings settings = settingsService.getSettings();
 
-        Application application = new Application();
-        application.setResumeVersion(settings.getDefaultResumeVersion());
-        application.setChannel(settings.getDefaultChannel());
+		Application application = new Application();
+		application.setResumeVersion(settings.getDefaultResumeVersion());
+		application.setChannel(settings.getDefaultChannel());
 
-        if (settings.getUseTodayAsDefault() != null && settings.getUseTodayAsDefault()) {
-            application.setAppliedDate(LocalDate.now());
-        }
+		if (settings.getUseTodayAsDefault() != null && settings.getUseTodayAsDefault()) {
+			application.setAppliedDate(LocalDate.now());
+		}
 
-        if (settings.getDefaultStatus() != null) {
-            application.setCurrentStatus(settings.getDefaultStatus());
-        } else {
-            application.setCurrentStatus(ApplicationStatus.APPLIED);
-        }
+		if (settings.getDefaultStatus() != null) {
+			application.setCurrentStatus(settings.getDefaultStatus());
+		} else {
+			application.setCurrentStatus(ApplicationStatus.APPLIED);
+		}
 
-        model.addAttribute("application", application);
-        model.addAttribute("applicationId", null);
-        model.addAttribute("statuses", ApplicationStatus.values());
-        return "applications/form";
-    }
+		model.addAttribute("application", application);
+		model.addAttribute("applicationId", null);
+		model.addAttribute("statuses", ApplicationStatus.values());
+		return "applications/form";
+	}
 
-    @PostMapping
-    public String create(@ModelAttribute Application application,
-                         @RequestParam(required = false) String portalName,
-                         @RequestParam(required = false) String portalUrl,
-                         @RequestParam(required = false) String loginId,
-                         @RequestParam(required = false) String loginMemo,
-                         Model model,
-                         RedirectAttributes redirectAttributes) {
+	@PostMapping
+	public String create(@ModelAttribute Application application,
+			@RequestParam(required = false) String portalName,
+			@RequestParam(required = false) String portalUrl,
+			@RequestParam(required = false) String loginId,
+			@RequestParam(required = false) String loginMemo,
+			Model model,
+			RedirectAttributes redirectAttributes) {
 
-        if (application.getCompanyName() == null || application.getCompanyName().isBlank()) {
-            model.addAttribute("application", application);
-            model.addAttribute("applicationId", null);
-            model.addAttribute("statuses", ApplicationStatus.values());
-            model.addAttribute("errorMessage", "会社名は必須です");
-            return "applications/form";
-        }
+		if (application.getCompanyName() == null || application.getCompanyName().isBlank()) {
+			model.addAttribute("application", application);
+			model.addAttribute("applicationId", null);
+			model.addAttribute("statuses", ApplicationStatus.values());
+			model.addAttribute("errorMessage", "会社名は必須です");
+			return "applications/form";
+		}
 
-        Application saved = applicationService.create(application);
+		Application saved = applicationService.create(application);
 
-        boolean hasPortalInfo =
-                (portalName != null && !portalName.isBlank()) ||
-                (portalUrl != null && !portalUrl.isBlank()) ||
-                (loginId != null && !loginId.isBlank()) ||
-                (loginMemo != null && !loginMemo.isBlank());
+		boolean hasPortalInfo = (portalName != null && !portalName.isBlank()) ||
+				(portalUrl != null && !portalUrl.isBlank()) ||
+				(loginId != null && !loginId.isBlank()) ||
+				(loginMemo != null && !loginMemo.isBlank());
 
-        if (hasPortalInfo) {
-            portalInfoService.save(saved, portalName, portalUrl, loginId, loginMemo);
-        }
+		if (hasPortalInfo) {
+			portalInfoService.save(saved, portalName, portalUrl, loginId, loginMemo);
+		}
 
-        redirectAttributes.addFlashAttribute("successMessage", "応募情報を追加しました");
-        return "redirect:/applications/" + saved.getId();
-    }
+		redirectAttributes.addFlashAttribute("successMessage", "応募情報を追加しました");
+		return "redirect:/applications/" + saved.getId();
+	}
 
-    @GetMapping("/{id}")
-    public String detail(@PathVariable Long id, Model model) {
-        Application application = applicationService.findById(id);
+	@GetMapping("/{id}")
+	public String detail(@PathVariable Long id) {
+		return "redirect:/applications/" + id + "/edit";
+	}
 
+	@GetMapping("/{id}/edit")
+	public String editForm(@PathVariable Long id, Model model) {
+		Application application = applicationService.findById(id);
+		model.addAttribute("application", application);
+		model.addAttribute("applicationId", id);
+		model.addAttribute("statuses", ApplicationStatus.values());
+		return "applications/form";
+	}
 
-        model.addAttribute("jobApplication", application);
-        model.addAttribute("applicationId", id);
-        model.addAttribute("activityLogs", activityLogService.findByApplicationId(id));
-        model.addAttribute("portalInfos", portalInfoService.findByApplicationId(id));
-        model.addAttribute("inactiveReminder",
-                applicationService.shouldShowInactiveReminder(application));
+	@PostMapping("/{id}/edit")
+	public String update(@PathVariable Long id,
+			@ModelAttribute Application application,
+			@RequestParam(required = false) String portalName,
+			@RequestParam(required = false) String portalUrl,
+			@RequestParam(required = false) String loginId,
+			@RequestParam(required = false) String loginMemo,
+			Model model,
+			RedirectAttributes redirectAttributes) {
 
-        return "applications/detail";
-    }
+		if (application.getCompanyName() == null || application.getCompanyName().isBlank()) {
+			model.addAttribute("application", application);
+			model.addAttribute("applicationId", id);
+			model.addAttribute("statuses", ApplicationStatus.values());
+			model.addAttribute("errorMessage", "会社名は必須です");
+			return "applications/form";
+		}
 
-    @GetMapping("/{id}/edit")
-    public String editForm(@PathVariable Long id, Model model) {
-        Application application = applicationService.findById(id);
-        model.addAttribute("application", application);
-        model.addAttribute("applicationId", id);
-        model.addAttribute("statuses", ApplicationStatus.values());
-        return "applications/form";
-    }
+		applicationService.update(id, application);
 
-    @PostMapping("/{id}/edit")
-    public String update(@PathVariable Long id,
-                         @ModelAttribute Application application,
-                         @RequestParam(required = false) String portalName,
-                         @RequestParam(required = false) String portalUrl,
-                         @RequestParam(required = false) String loginId,
-                         @RequestParam(required = false) String loginMemo,
-                         Model model,
-                         RedirectAttributes redirectAttributes) {
+		portalInfoService.deleteByApplicationId(id);
 
-        if (application.getCompanyName() == null || application.getCompanyName().isBlank()) {
-            model.addAttribute("application", application);
-            model.addAttribute("applicationId", id);
-            model.addAttribute("statuses", ApplicationStatus.values());
-            model.addAttribute("errorMessage", "会社名は必須です");
-            return "applications/form";
-        }
+		boolean hasPortalInfo = (portalName != null && !portalName.isBlank()) ||
+				(portalUrl != null && !portalUrl.isBlank()) ||
+				(loginId != null && !loginId.isBlank()) ||
+				(loginMemo != null && !loginMemo.isBlank());
 
-        applicationService.update(id, application);
+		if (hasPortalInfo) {
+			Application updatedApplication = applicationService.findById(id);
+			portalInfoService.save(updatedApplication, portalName, portalUrl, loginId, loginMemo);
+		}
 
-        portalInfoService.deleteByApplicationId(id);
+		redirectAttributes.addFlashAttribute("successMessage", "応募情報を更新しました");
+		return "redirect:/applications/" + id + "/edit";
+	}
 
-        boolean hasPortalInfo =
-                (portalName != null && !portalName.isBlank()) ||
-                (portalUrl != null && !portalUrl.isBlank()) ||
-                (loginId != null && !loginId.isBlank()) ||
-                (loginMemo != null && !loginMemo.isBlank());
+	@GetMapping("/{id}/status")
+	public String updateStatus(@PathVariable Long id,
+			@RequestParam ApplicationStatus status,
+			RedirectAttributes redirectAttributes) {
+		applicationService.updateStatus(id, status);
+		redirectAttributes.addFlashAttribute("successMessage", "選考ステータスを更新しました");
+		return "redirect:/applications/" + id;
+	}
 
-        if (hasPortalInfo) {
-            Application updatedApplication = applicationService.findById(id);
-            portalInfoService.save(updatedApplication, portalName, portalUrl, loginId, loginMemo);
-        }
+	@PostMapping("/{id}/memo")
+	public String updateMemo(@PathVariable Long id,
+			@RequestParam String memo,
+			RedirectAttributes redirectAttributes) {
+		applicationService.updateMemo(id, memo);
+		redirectAttributes.addFlashAttribute("successMessage", "メモを更新しました");
+		return "redirect:/applications/" + id;
+	}
 
-        redirectAttributes.addFlashAttribute("successMessage", "応募情報を更新しました");
-        return "redirect:/applications/" + id;
-    }
-
-    @GetMapping("/{id}/status")
-    public String updateStatus(@PathVariable Long id,
-                               @RequestParam ApplicationStatus status,
-                               RedirectAttributes redirectAttributes) {
-        applicationService.updateStatus(id, status);
-        redirectAttributes.addFlashAttribute("successMessage", "選考ステータスを更新しました");
-        return "redirect:/applications/" + id;
-    }
-
-    @PostMapping("/{id}/memo")
-    public String updateMemo(@PathVariable Long id,
-                             @RequestParam String memo,
-                             RedirectAttributes redirectAttributes) {
-        applicationService.updateMemo(id, memo);
-        redirectAttributes.addFlashAttribute("successMessage", "メモを更新しました");
-        return "redirect:/applications/" + id;
-    }
-
-    @PostMapping("/{id}/delete")
-    public String delete(@PathVariable Long id,
-                         RedirectAttributes redirectAttributes) {
-        applicationService.deleteById(id);
-        redirectAttributes.addFlashAttribute("successMessage", "応募情報を削除しました");
-        return "redirect:/applications";
-    }
+	@PostMapping("/{id}/delete")
+	public String delete(@PathVariable Long id,
+			RedirectAttributes redirectAttributes) {
+		applicationService.deleteById(id);
+		redirectAttributes.addFlashAttribute("successMessage", "応募情報を削除しました");
+		return "redirect:/applications";
+	}
 }

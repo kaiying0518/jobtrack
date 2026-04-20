@@ -13,7 +13,6 @@
         <nav class="nav-group">
             <a class="nav-link" th:href="@{/dashboard}">ホーム</a>
             <a class="nav-link active" th:href="@{/applications}">応募一覧</a>
-            <a class="nav-link" th:href="@{/activities}">活動記録</a>
             <a class="nav-link" th:href="@{/reflections}">振り返り</a>
             <a class="nav-link" th:href="@{/settings}">設定</a>
         </nav>
@@ -93,8 +92,6 @@
                         <th>応募日</th>
                         <th>次の予定</th>
                         <th>最終更新</th>
-                        <th>操作</th>
-                        <th>履歴</th>
                         <th>詳細</th>
                     </tr>
                     </thead>
@@ -105,7 +102,6 @@
                             <div class="company-cell">
                                 <div class="company-name" th:text="${app.companyName}">会社名</div>
                                 <div class="company-role" th:text="${app.positionName}">職種</div>
-                                
 
                                 <div th:if="${inactiveReminderMap != null and inactiveReminderMap[app.id]}"
                                      style="margin-top: 6px;">
@@ -114,18 +110,18 @@
                             </div>
                         </td>
 
-						<td th:text="
-						    ${app.channel == null or #strings.isEmpty(app.channel)} ? '未設定' :
-						    (${app.channel == 'JOB_SITE'} ? '求人サイト' :
-						    (${app.channel == 'AGENT'} ? 'エージェント' :
-						    (${app.channel == 'SCOUT'} ? 'スカウト' :
-						    (${app.channel == 'DIRECT'} ? '直接応募' : app.channel))))">
-						    応募方法
-						</td>
+                        <td th:text="
+                            ${app.channel == null or #strings.isEmpty(app.channel)} ? '未設定' :
+                            (${app.channel == 'JOB_SITE'} ? '求人サイト' :
+                            (${app.channel == 'AGENT'} ? 'エージェント' :
+                            (${app.channel == 'SCOUT'} ? 'スカウト' :
+                            (${app.channel == 'DIRECT'} ? '直接応募' : app.channel))))">
+                            応募方法
+                        </td>
 
                         <td>
                             <span class="badge"
-                                 th:text="${app.currentStatus == null ? '未設定' : app.currentStatus.label}">
+                                  th:text="${app.currentStatus == null ? '未設定' : app.currentStatus.label}">
                                 応募済み
                             </span>
                         </td>
@@ -143,28 +139,9 @@
                         <td th:text="${#temporals.format(app.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-03-26</td>
 
                         <td>
-                            <div class="inline-actions">
-                                <a class="text-link"
-                                   th:href="@{/applications/{id}/status(id=${app.id}, status='WEB_TEST')}">Webテスト</a>
-                                <a class="text-link"
-                                   th:href="@{/applications/{id}/status(id=${app.id}, status='DOCUMENT_PASS')}">書類通過</a>
-                                <a class="text-link"
-                                   th:href="@{/applications/{id}/status(id=${app.id}, status='INTERVIEW_1')}">一次面接</a>
-                                <a class="text-link"
-                                   th:href="@{/applications/{id}/status(id=${app.id}, status='REJECT')}">見送り</a>
-                            </div>
-                        </td>
-
-                        <td>
-                            <a class="text-link" th:href="@{/activities}">
-                                履歴を見る
-                            </a>
-                        </td>
-
-                        <td>
-                            <a class="text-link" th:href="@{/applications/{id}(id=${app.id})}">
-                                詳細
-                            </a>
+							<a class="text-link" th:href="@{/applications/{id}/edit(id=${app.id})}">
+							    詳細
+							</a>
                         </td>
                     </tr>
                     </tbody>

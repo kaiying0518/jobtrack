@@ -13,7 +13,6 @@
         <nav class="nav-group">
             <a class="nav-link active" th:href="@{/dashboard}">ホーム</a>
             <a class="nav-link" th:href="@{/applications}">応募一覧</a>
-            <a class="nav-link" th:href="@{/activities}">活動記録</a>
             <a class="nav-link" th:href="@{/reflections}">振り返り</a>
             <a class="nav-link" th:href="@{/settings}">設定</a>
         </nav>
@@ -27,10 +26,7 @@
                     応募状況をまとめて確認できます。
                 </p>
             </div>
-            <div class="topbar-actions">
-                <a class="btn btn-secondary" th:href="@{/applications}">応募一覧を見る</a>
-                <a class="btn btn-primary" th:href="@{/applications/new}">＋ 新規応募</a>
-            </div>
+           
         </div>
 
         <section class="grid-4">
@@ -67,33 +63,6 @@
             </div>
         </section>
 
-        <section class="card">
-            <div class="card-title-row">
-               <h2 class="card-title">すぐできること</h2>
-               <span class="card-subtext">よく使う操作</span>
-            </div>
-            <div class="quick-actions">
-                <a class="quick-action" th:href="@{/applications/new}">
-                    <div class="quick-action-title">新しい応募を追加</div>
-                    <div class="quick-action-desc">
-                        会社名・職種・応募経由を中心にすばやく追加。
-                    </div>
-                </a>
-                <a class="quick-action" th:href="@{/applications}">
-                    <div class="quick-action-title">進捗を更新</div>
-                    <div class="quick-action-desc">
-                        書類通過・面接・内定などを一覧から更新。
-                    </div>
-                </a>
-                <a class="quick-action" th:href="@{/reflections}">
-                    <div class="quick-action-title">振り返りを見る</div>
-                    <div class="quick-action-desc">
-                        最近の傾向を確認。
-                    </div>
-                </a>
-            </div>
-        </section>
-
         <section class="grid-2">
             <div class="card">
                 <div class="card-title-row">
@@ -113,14 +82,7 @@
                         </div>
 
                         <span class="badge"
-                              th:text="${app.currentStatus == null ? '未設定' : app.currentStatus.label}"
-                              th:classappend="
-                                ${app.currentStatus.name() == 'APPLIED'} ? ' badge-applied' :
-                                (${app.currentStatus.name() == 'WEB_TEST'} ? ' badge-web-test' :
-                                (${app.currentStatus.name() == 'DOCUMENT_PASS'} ? ' badge-doc-pass' :
-                                (${app.currentStatus.name() == 'INTERVIEW_1' or app.currentStatus.name() == 'INTERVIEW_2' or app.currentStatus.name() == 'FINAL_INTERVIEW'} ? ' badge-interview' :
-                                (${app.currentStatus.name() == 'OFFER'} ? ' badge-offer' :
-                                (${app.currentStatus.name() == 'REJECT'} ? ' badge-reject' : ' badge-withdrawn')))))">
+                              th:text="${app.currentStatus == null ? '未設定' : app.currentStatus.label}">
                             応募済み
                         </span>
                     </div>
@@ -131,24 +93,16 @@
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-title-row">
-                    <h2 class="card-title">簡単フィードバック</h2>
-                    <span class="card-subtext">次に何をするかのヒント</span>
-                </div>
+			<div class="card">
+			    <div class="card-title-row">
+			        <h2 class="card-title">AI Summary</h2>
+			    </div>
 
-                <div class="notice-list" th:if="${reflectionMessages != null and !#lists.isEmpty(reflectionMessages)}">
-                    <div th:each="msg : ${reflectionMessages}"
-                         class="notice-item"
-                         th:text="${msg}">
-                        フィードバック
-                    </div>
-                </div>
-
-                <div class="empty-box" th:if="${reflectionMessages == null or #lists.isEmpty(reflectionMessages)}">
-                    まだフィードバックはありません。
-                </div>
-            </div>
+			    <div class="empty-box" style="white-space: pre-line;">
+			        まだAIサマリーはありません。
+			        AI連携後、ここに短い要約を表示します。
+			    </div>
+			</div>
         </section>
     </main>
 </div>

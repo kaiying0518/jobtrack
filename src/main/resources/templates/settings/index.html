@@ -9,127 +9,226 @@
 </head>
 
 <body>
-    <div class="app-shell">
-        <aside class="sidebar">
-            <div class="brand">JobTrack</div>
-            <nav class="nav-group">
-                <a class="nav-link" th:href="@{/dashboard}">ホーム</a>
-                <a class="nav-link" th:href="@{/applications}">応募一覧</a>
-                <a class="nav-link" th:href="@{/activities}">活動記録</a>
-                <a class="nav-link" th:href="@{/reflections}">振り返り</a>
-                <a class="nav-link active" th:href="@{/settings}">設定</a>
-            </nav>
-        </aside>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand">JobTrack</div>
+        <nav class="nav-group">
+            <a class="nav-link" th:href="@{/dashboard}">ホーム</a>
+            <a class="nav-link" th:href="@{/applications}">応募一覧</a>
+            <a class="nav-link" th:href="@{/reflections}">AI振り返り</a>
+            <a class="nav-link active" th:href="@{/settings}">設定</a>
+        </nav>
+    </aside>
 
-        <main class="main">
-            <div class="topbar">
-                <div>
-                    <h1 class="page-title">設定</h1>
-                    <p class="page-desc">基本設定、初期値、データ管理をまとめます。</p>
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h1 class="page-title">設定</h1>
+            </div>
+        </div>
+
+        <div th:if="${successMessage}" class="card" style="margin-bottom: 12px;">
+            <p th:text="${successMessage}" style="margin: 0; color: #166534; font-weight: 600;">
+                保存しました
+            </p>
+        </div>
+
+        <div th:if="${errorMessage}" class="card" style="margin-bottom: 12px;">
+            <p th:text="${errorMessage}" style="margin: 0; color: #b91c1c; font-weight: 600;">
+                エラーがあります
+            </p>
+        </div>
+
+        <section class="grid-2">
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">AI連携</h2>
                 </div>
+
+                <form id="ai-settings-form" th:action="@{/settings}" method="post">
+                    <div class="info-list">
+                        <div class="info-item" style="grid-column: 1 / -1;">
+                            <label class="info-label" style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="aiEnabled" name="aiEnabled" value="true"
+                                       th:checked="${settings.aiEnabled}">
+                                AI連携を有効にする
+                            </label>
+                        </div>
+
+                        <div class="info-item">
+                            <label class="info-label" for="aiProvider">API Provider</label>
+                            <select class="select" id="aiProvider" name="aiProvider">
+                                <option value="">選択してください</option>
+                                <option th:each="provider : ${aiProviders}"
+                                        th:value="${provider}"
+                                        th:text="${provider}"
+                                        th:selected="${settings.aiProvider == provider}">
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="info-item" style="grid-column: 1 / -1;">
+                            <label class="info-label" for="aiApiKey">API Key</label>
+                            <input class="input" id="aiApiKey" type="password" name="aiApiKey"
+                                   placeholder="未入力の場合は現在のAPIキーを保持します">
+
+                            <input type="hidden" id="hasAiApiKey" th:value="${hasAiApiKey}">
+                            <input type="hidden" id="currentAiProvider" th:value="${currentAiProvider}">
+
+                            <div id="aiApiKeyError"
+                                 class="card-subtext"
+                                 style="margin-top: 6px; color: #b91c1c; display: none;"></div>
+                        </div>
+
+                        <div class="info-item" style="grid-column: 1 / -1;">
+                            <details style="width: 100%;">
+                                <summary style="cursor: pointer; font-weight: 600; margin-bottom: 8px;">
+                                    詳細設定（必要な場合のみ）
+                                </summary>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+                                    <div>
+                                        <label class="info-label" for="aiModel">Model</label>
+                                        <input class="input" id="aiModel" type="text" name="aiModel"
+                                               th:value="${settings.aiModel}"
+                                               placeholder="未入力ならデフォルトモデルを使用">
+                                    </div>
+
+                                    <div>
+                                        <label class="info-label" for="aiTemperature">Temperature</label>
+                                        <input class="input" id="aiTemperature" type="number" step="0.1" min="0" max="2"
+                                               name="aiTemperature"
+                                               th:value="${settings.aiTemperature}"
+                                               placeholder="例：0.4">
+                                    </div>
+
+                                    <div style="grid-column: 1 / -1;">
+                                        <label class="info-label" for="aiMaxTokens">Max Tokens</label>
+                                        <input class="input" id="aiMaxTokens" type="number" name="aiMaxTokens"
+                                               th:value="${settings.aiMaxTokens}"
+                                               placeholder="例：800">
+                                    </div>
+
+                                    <div style="grid-column: 1 / -1;">
+                                        <label class="info-label" for="aiSystemPrompt">System Prompt</label>
+                                        <textarea class="textarea" id="aiSystemPrompt" name="aiSystemPrompt"
+                                                  placeholder="AIの役割や出力方針を指定"
+                                                  th:text="${settings.aiSystemPrompt}"></textarea>
+                                    </div>
+
+                                    <div style="grid-column: 1 / -1;">
+                                        <label class="info-label" for="aiUserPromptTemplate">User Prompt Template</label>
+                                        <textarea class="textarea" id="aiUserPromptTemplate" name="aiUserPromptTemplate"
+                                                  placeholder="追加の指示や出力形式を指定"
+                                                  th:text="${settings.aiUserPromptTemplate}"></textarea>
+                                    </div>
+
+                                    <div style="grid-column: 1 / -1;">
+                                        <label class="info-label" style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="checkbox" name="useFullChatHistory" value="true"
+                                                   th:checked="${settings.useFullChatHistory}">
+                                            AI Chatで全履歴を使う
+                                        </label>
+                                        <div class="card-subtext" style="margin-top: 6px;">
+                                            オフの場合は直近8件のメッセージのみAIに送信します。
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+
+                    <div class="topbar-actions" style="margin-top: 12px;">
+                        <button class="btn btn-primary" type="submit">保存する</button>
+                    </div>
+                </form>
             </div>
 
-			<div th:if="${successMessage}"
-			     th:text="${successMessage}"
-			     style="margin: 16px 0 20px;
-			            padding: 16px 20px;
-			            border-radius: 12px;
-			            background: #e8f7ee;
-			            border-left: 6px solid #2e9f5b;
-			            color: #1f6f43;
-			            font-size: 18px;
-			            font-weight: 700;
-			            box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-			    設定を保存しました
-			</div>
-
-            <section class="grid-2">
-                <div class="card">
-                    <div class="card-title-row">
-                        <h2 class="card-title">初期設定</h2>
-                    </div>
-
-                    <form th:action="@{/settings}" th:object="${settings}" method="post">
-                        <div class="info-list">
-                            <div class="info-item">
-                                <label class="info-label" for="defaultResumeVersion">よく使う履歴書</label>
-                                <input class="input" id="defaultResumeVersion" type="text"
-                                       th:field="*{defaultResumeVersion}" placeholder="例：職務経歴書 v3">
-                            </div>
-
-                            <div class="info-item">
-                                <label class="info-label" for="defaultStatus">最初の状況</label>
-                                <select class="select" id="defaultStatus" th:field="*{defaultStatus}">
-                                    <option th:each="status : ${statuses}" th:value="${status}" th:text="${
-                                                   status.name() == 'APPLIED' ? '応募済み' :
-                                                   status.name() == 'WEB_TEST' ? 'WEBテスト' :
-                                                   status.name() == 'DOCUMENT_PASS' ? '書類通過' :
-                                                   status.name() == 'INTERVIEW_1' ? '一次面接' :
-                                                   status.name() == 'INTERVIEW_2' ? '二次面接' :
-                                                   status.name() == 'FINAL_INTERVIEW' ? '最終面接' :
-                                                   status.name() == 'OFFER' ? '内定' :
-                                                   status.name() == 'REJECT' ? '不採用' :
-                                                   status.name() == 'WITHDRAWN' ? '辞退' :
-                                                   status
-                                               }">
-                                    </option>
-                                </select>
-                            </div>
-
-                            <div class="info-item">
-                                <label class="info-label" for="useTodayAsDefault">応募日を今日にする</label>
-                                <select class="select" id="useTodayAsDefault" th:field="*{useTodayAsDefault}">
-                                    <option th:value="true">はい</option>
-                                    <option th:value="false">いいえ</option>
-                                </select>
-                            </div>
-
-                            <div class="info-item">
-                                <label class="info-label" for="defaultChannel">応募した方法</label>
-                                <select class="select" id="defaultChannel" th:field="*{defaultChannel}">
-                                    <option value="">選択してください</option>
-                                    <option value="DIRECT">企業サイトから直接応募</option>
-                                    <option value="JOB_SITE">求人サイト（Mynavi・Rikunaviなど）</option>
-                                    <option value="AGENT">エージェント経由</option>
-                                    <option value="SCOUT">スカウト</option>
-                                    <option value="OTHER">その他</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="topbar-actions" style="margin-top: 16px;">
-                            <button class="btn btn-primary" type="submit">保存する</button>
-                        </div>
-                    </form>
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">CSV出力</h2>
                 </div>
 
-                <div class="card">
-                    <div class="card-title-row">
-                        <h2 class="card-title">データ管理</h2>
-                        <span class="card-subtext">データ出力など</span>
-                    </div>
-
-                    <div class="mini-list">
-                        <div class="mini-item">
-                            <div>
-                                <div class="mini-title">CSV出力</div>
-                                <div class="mini-sub">応募一覧をCSVで出力</div>
-                            </div>
-                            <a class="btn btn-secondary" th:href="@{/settings/export/csv}">出力</a>
+                <div class="mini-list">
+                    <div class="mini-item">
+                        <div>
+                            <div class="mini-title">応募一覧をCSVで出力</div>
                         </div>
-
-                        <div class="mini-item">
-                            <div>
-                                <div class="mini-title">応募を削除する</div>
-                                <div class="mini-sub">不要な応募は応募一覧ページから削除できます</div>
-                            </div>
-                            <a class="btn btn-secondary" th:href="@{/applications}">応募一覧へ</a>
-                        </div>
+                        <a class="btn btn-secondary" th:href="@{/settings/export/csv}">出力</a>
                     </div>
                 </div>
-            </section>
-        </main>
-    </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("ai-settings-form");
+    const aiEnabled = document.getElementById("aiEnabled");
+    const aiProvider = document.getElementById("aiProvider");
+    const aiApiKey = document.getElementById("aiApiKey");
+    const aiApiKeyError = document.getElementById("aiApiKeyError");
+    const hasAiApiKey = document.getElementById("hasAiApiKey");
+    const currentAiProvider = document.getElementById("currentAiProvider");
+
+    if (!form || !aiEnabled || !aiProvider || !aiApiKey || !aiApiKeyError || !hasAiApiKey || !currentAiProvider) {
+        return;
+    }
+
+    function clearError() {
+        aiApiKeyError.textContent = "";
+        aiApiKeyError.style.display = "none";
+        aiApiKey.style.borderColor = "";
+        aiProvider.style.borderColor = "";
+    }
+
+    function showError(message, target) {
+        aiApiKeyError.textContent = message;
+        aiApiKeyError.style.display = "block";
+
+        if (target === "provider") {
+            aiProvider.style.borderColor = "#dc2626";
+        } else {
+            aiApiKey.style.borderColor = "#dc2626";
+        }
+    }
+
+    aiEnabled.addEventListener("change", clearError);
+    aiProvider.addEventListener("change", clearError);
+    aiApiKey.addEventListener("input", clearError);
+
+    form.addEventListener("submit", function (event) {
+        clearError();
+
+        if (!aiEnabled.checked) {
+            return;
+        }
+
+        const selectedProvider = aiProvider.value;
+        const oldProvider = currentAiProvider.value;
+        const hasSavedApiKey = hasAiApiKey.value === "true";
+        const providerChanged = selectedProvider !== oldProvider;
+
+        if (!selectedProvider) {
+            event.preventDefault();
+            showError("AI連携を使う場合は、API Provider を選択してください。", "provider");
+            return;
+        }
+
+        if (!hasSavedApiKey && !aiApiKey.value.trim()) {
+            event.preventDefault();
+            showError("AI連携を使う場合は、API Key を入力してください。", "apiKey");
+            return;
+        }
+
+        if (providerChanged && !aiApiKey.value.trim()) {
+            event.preventDefault();
+            showError("AI Provider を変更した場合は、API Key を再入力してください。", "apiKey");
+        }
+    });
+});
+</script>
 </body>
 
 </html>

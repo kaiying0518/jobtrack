@@ -13,7 +13,6 @@
         <nav class="nav-group">
             <a class="nav-link" th:href="@{/dashboard}">ホーム</a>
             <a class="nav-link" th:href="@{/applications}">応募一覧</a>
-            <a class="nav-link" th:href="@{/activities}">活動記録</a>
             <a class="nav-link active" th:href="@{/reflections}">振り返り</a>
             <a class="nav-link" th:href="@{/settings}">設定</a>
         </nav>
@@ -23,71 +22,72 @@
         <div class="topbar">
             <div>
                 <h1 class="page-title">振り返り</h1>
-                <p class="page-desc">最近の動きと全体の流れを見返せます。</p>
             </div>
         </div>
 
-        <section class="grid-3">
-            <div class="card stat-card">
-                <div class="stat-label">最近7日</div>
-                <div class="stat-value" th:text="${recent7Count}">0</div>
-                <div class="stat-sub">最近7日の動き</div>
-            </div>
-
-            <div class="card stat-card">
-                <div class="stat-label">最近30日</div>
-                <div class="stat-value" th:text="${recent30Count}">0</div>
-                <div class="stat-sub">この1か月の動き</div>
-            </div>
-
-            <div class="card stat-card">
-                <div class="stat-label">全体</div>
-                <div class="stat-value" th:text="${totalCount}">0</div>
-                <div class="stat-sub">これまでの応募数</div>
-            </div>
-        </section>
-
         <section class="card">
             <div class="card-title-row">
-                <h2 class="card-title">簡単フィードバック</h2>
-                <span class="card-subtext">今の状況をひとことにまとめています</span>
+                <h2 class="card-title">AI Summary</h2>
             </div>
 
-            <div class="notice-list" th:if="${summaryMessages != null and !#lists.isEmpty(summaryMessages)}">
-                <div class="notice-item notice-info" th:each="msg : ${summaryMessages}" th:text="${msg}">
-                    フィードバック
-                </div>
-            </div>
-
-            <div class="empty-box" th:if="${summaryMessages == null or #lists.isEmpty(summaryMessages)}">
-                まだ振り返れる内容がありません。
-            </div>
-        </section>
-
-        <section class="card">
-            <div class="card-title-row">
-                <h2 class="card-title">AIサマリー</h2>
-                <span class="card-subtext">応募状況をもとに、振り返りの要点を整理します</span>
-            </div>
-
-            <p class="page-desc" style="margin-top: 0;">
-                AI連携は未実装です。
-            </p>
-
-            <div style="margin-top: 12px;">
+            <div style="margin-top: 8px;">
                 <button type="button" id="generate-ai-summary-btn" class="btn btn-primary">
-                    AIで振り返りを生成
+                    生成する
                 </button>
             </div>
 
-            <div id="ai-summary-loading" class="card-subtext" style="margin-top: 12px; display: none;">
+            <div id="ai-summary-loading" class="card-subtext" style="margin-top: 10px; display: none;">
                 生成中...
             </div>
 
             <div id="ai-summary-result"
                  class="empty-box"
                  style="margin-top: 12px; white-space: pre-line;">
-                まだAIサマリーは生成されていません。
+                まだ生成されていません。
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-title-row">
+                <h2 class="card-title">AI Chat</h2>
+            </div>
+
+            <div class="chat-layout">
+                <div class="chat-sidebar-panel">
+                    <button type="button" id="new-chat-btn" class="btn btn-primary" style="width: 100%;">
+                        新しいチャット
+                    </button>
+
+                    <button type="button" id="delete-chat-btn" class="btn btn-danger" style="width: 100%; margin-top: 8px;">
+                        現在のチャットを削除
+                    </button>
+
+                    <div id="chat-session-list" class="chat-session-list">
+                        <div class="chat-empty">読み込み中...</div>
+                    </div>
+                </div>
+
+                <div class="chat-main-panel">
+                    <div id="ai-chat-loading" class="card-subtext" style="display: none; margin-bottom: 8px;">
+                        応答中...
+                    </div>
+
+                    <div id="chat-message-list" class="chat-message-list">
+                        <div class="chat-empty">まだ対話はありません。新しいメッセージを送ってください。</div>
+                    </div>
+
+                    <div class="chat-input-area">
+                        <textarea id="ai-chat-input"
+                                  class="textarea"
+                                  placeholder="例：今の応募状況から次にやるべきことを教えてください"></textarea>
+
+                        <div class="chat-action-row">
+                            <button type="button" id="send-ai-chat-btn" class="btn btn-primary">
+                                送信
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
@@ -95,25 +95,236 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const button = document.getElementById("generate-ai-summary-btn");
-    const loading = document.getElementById("ai-summary-loading");
-    const result = document.getElementById("ai-summary-result");
+    const summaryButton = document.getElementById("generate-ai-summary-btn");
+    const summaryLoading = document.getElementById("ai-summary-loading");
+    const summaryResult = document.getElementById("ai-summary-result");
 
-    if (!button || !loading || !result) {
-        return;
+    const chatButton = document.getElementById("send-ai-chat-btn");
+    const chatInput = document.getElementById("ai-chat-input");
+    const chatLoading = document.getElementById("ai-chat-loading");
+    const messageList = document.getElementById("chat-message-list");
+    const sessionList = document.getElementById("chat-session-list");
+    const newChatButton = document.getElementById("new-chat-btn");
+    const deleteChatButton = document.getElementById("delete-chat-btn");
+
+    let currentChatId = null;
+    let sessions = [];
+
+	if (summaryButton && summaryLoading && summaryResult) {
+	    summaryButton.addEventListener("click", async function () {
+	        summaryButton.disabled = true;
+	        summaryLoading.style.display = "block";
+	        summaryResult.textContent = "";
+
+	        try {
+	            const response = await fetch("/reflections/ai-summary", {
+	                method: "POST",
+	                headers: {
+	                    "Content-Type": "application/json"
+	                }
+	            });
+
+	            const data = await response.json();
+
+	            if (!response.ok || data.success === false) {
+	                summaryResult.textContent = data.error || "AIサマリーの生成に失敗しました。";
+	                return;
+	            }
+
+	            summaryResult.textContent = data.summary || "AIサマリーを取得できませんでした。";
+	        } catch (error) {
+	            console.error(error);
+	            summaryResult.textContent = "AIサマリーの生成に失敗しました。";
+	        } finally {
+	            summaryLoading.style.display = "none";
+	            summaryButton.disabled = false;
+	        }
+	    });
+	}
+
+    function escapeHtml(text) {
+        return String(text ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
     }
 
-    button.addEventListener("click", async function () {
-        button.disabled = true;
-        loading.style.display = "block";
-        result.textContent = "";
+    function renderEmptyMessages(text) {
+        messageList.innerHTML = `<div class="chat-empty">${escapeHtml(text)}</div>`;
+    }
+
+    function appendMessage(role, content) {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `chat-message ${role === "USER" || role === "user" ? "user" : "assistant"}`;
+
+        const roleLabel = role === "USER" || role === "user" ? "You" : "AI";
+
+        messageDiv.innerHTML = `
+            <div class="chat-message-role">${roleLabel}</div>
+            <div>${escapeHtml(content).replaceAll("\n", "<br>")}</div>
+        `;
+
+        if (messageList.querySelector(".chat-empty")) {
+            messageList.innerHTML = "";
+        }
+
+        messageList.appendChild(messageDiv);
+        messageList.scrollTop = messageList.scrollHeight;
+    }
+
+    function renderSessions() {
+        if (!sessionList) {
+            return;
+        }
+
+        if (sessions.length === 0) {
+            sessionList.innerHTML = `<div class="chat-empty">まだチャットはありません。</div>`;
+            return;
+        }
+
+        sessionList.innerHTML = "";
+
+        sessions.forEach(session => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "chat-session-item" + (session.chatId === currentChatId ? " active" : "");
+            button.textContent = session.title || `チャット ${session.chatId}`;
+
+            button.addEventListener("click", async function () {
+                currentChatId = session.chatId;
+                renderSessions();
+                await loadMessages(currentChatId);
+            });
+
+            sessionList.appendChild(button);
+        });
+    }
+
+    function upsertSession(chatId, title) {
+        const existingIndex = sessions.findIndex(session => session.chatId === chatId);
+
+        if (existingIndex >= 0) {
+            const existing = sessions[existingIndex];
+            sessions.splice(existingIndex, 1);
+            sessions.unshift({
+                chatId: existing.chatId,
+                title: existing.title || title || `チャット ${chatId}`
+            });
+        } else {
+            sessions.unshift({
+                chatId: chatId,
+                title: title || `チャット ${chatId}`
+            });
+        }
+
+        renderSessions();
+    }
+
+    async function loadSessions() {
+        try {
+            const response = await fetch("/api/chat/sessions");
+
+            if (!response.ok) {
+                throw new Error("failed to load sessions");
+            }
+
+            const data = await response.json();
+
+            if (!Array.isArray(data)) {
+                sessions = [];
+                currentChatId = null;
+                renderSessions();
+                renderEmptyMessages("まだ対話はありません。新しいメッセージを送ってください。");
+                return;
+            }
+
+            sessions = data;
+            renderSessions();
+
+            if (sessions.length > 0) {
+                currentChatId = sessions[0].chatId;
+                renderSessions();
+                await loadMessages(currentChatId);
+            } else {
+                currentChatId = null;
+                renderEmptyMessages("まだ対話はありません。新しいメッセージを送ってください。");
+            }
+        } catch (error) {
+            console.error(error);
+            sessions = [];
+            currentChatId = null;
+            renderSessions();
+            renderEmptyMessages("チャット一覧の取得に失敗しました。");
+        }
+    }
+
+    async function loadMessages(chatId) {
+        if (!chatId) {
+            renderEmptyMessages("まだ対話はありません。新しいメッセージを送ってください。");
+            return;
+        }
+
+        chatLoading.style.display = "block";
+        messageList.innerHTML = "";
 
         try {
-            const response = await fetch("/reflections/ai-summary", {
+            const response = await fetch(`/api/chat/${chatId}/messages`);
+
+            if (!response.ok) {
+                throw new Error("failed to load messages");
+            }
+
+            const messages = await response.json();
+
+            if (!Array.isArray(messages) || messages.length === 0) {
+                renderEmptyMessages("まだ対話はありません。");
+                return;
+            }
+
+            messageList.innerHTML = "";
+            messages.forEach(message => {
+                appendMessage(message.role, message.content);
+            });
+        } catch (error) {
+            console.error(error);
+            renderEmptyMessages("メッセージ履歴の取得に失敗しました。");
+        } finally {
+            chatLoading.style.display = "none";
+        }
+    }
+
+    async function sendMessage() {
+        const message = chatInput.value.trim();
+
+        if (!message) {
+            alert("質問を入力してください。");
+            return;
+        }
+
+        chatButton.disabled = true;
+        chatLoading.style.display = "block";
+
+        const draftMessage = message;
+        chatInput.value = "";
+
+        if (!currentChatId && messageList.querySelector(".chat-empty")) {
+            messageList.innerHTML = "";
+        }
+
+        appendMessage("USER", draftMessage);
+
+        try {
+            const response = await fetch("/api/chat/send", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
-                }
+                },
+                body: JSON.stringify({
+                    chatId: currentChatId,
+                    message: draftMessage
+                })
             });
 
             if (!response.ok) {
@@ -121,15 +332,99 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             const data = await response.json();
-            result.textContent = data.summary ?? "AIサマリーを取得できませんでした。";
+
+            if (data.success === false) {
+                throw new Error(data.error || "AI対話に失敗しました。");
+            }
+
+            if (data.chatId) {
+                currentChatId = data.chatId;
+                upsertSession(
+                    currentChatId,
+                    draftMessage.length <= 20 ? draftMessage : draftMessage.substring(0, 20)
+                );
+            }
+
+            appendMessage("ASSISTANT", data.reply ?? "AIの応答を取得できませんでした。");
         } catch (error) {
             console.error(error);
-            result.textContent = "AIサマリーの生成に失敗しました。";
+            appendMessage("ASSISTANT", error.message || "AI対話に失敗しました。");
         } finally {
-            loading.style.display = "none";
-            button.disabled = false;
+            chatLoading.style.display = "none";
+            chatButton.disabled = false;
+            chatInput.focus();
         }
-    });
+    }
+
+    function startNewChat() {
+        currentChatId = null;
+        renderSessions();
+        renderEmptyMessages("まだ対話はありません。新しいメッセージを送ってください。");
+        chatInput.value = "";
+        chatInput.focus();
+    }
+
+    async function deleteCurrentChat() {
+        if (!currentChatId) {
+            alert("削除するチャットがありません。");
+            return;
+        }
+
+        if (!confirm("現在のチャットを削除しますか？")) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/chat/${currentChatId}`, {
+                method: "DELETE"
+            });
+
+            if (!response.ok) {
+                throw new Error("delete failed");
+            }
+
+            sessions = sessions.filter(session => session.chatId !== currentChatId);
+
+            if (sessions.length > 0) {
+                currentChatId = sessions[0].chatId;
+                renderSessions();
+                await loadMessages(currentChatId);
+            } else {
+                currentChatId = null;
+                renderSessions();
+                renderEmptyMessages("チャットを削除しました。");
+            }
+
+            chatInput.value = "";
+            chatInput.focus();
+        } catch (error) {
+            console.error(error);
+            alert("チャット削除に失敗しました。");
+        }
+    }
+
+    if (chatButton) {
+        chatButton.addEventListener("click", sendMessage);
+    }
+
+    if (chatInput) {
+        chatInput.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+    }
+
+    if (newChatButton) {
+        newChatButton.addEventListener("click", startNewChat);
+    }
+
+    if (deleteChatButton) {
+        deleteChatButton.addEventListener("click", deleteCurrentChat);
+    }
+
+    loadSessions();
 });
 </script>
 </body>

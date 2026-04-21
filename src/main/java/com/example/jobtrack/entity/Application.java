@@ -65,7 +65,9 @@ public class Application {
         if (currentStatus == null) {
             currentStatus = ApplicationStatus.APPLIED;
         }
-        updatedAt = LocalDateTime.now();
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
     }
 
     @PreUpdate

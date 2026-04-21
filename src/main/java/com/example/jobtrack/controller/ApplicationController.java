@@ -28,7 +28,7 @@ import com.example.jobtrack.service.SettingsService;
 public class ApplicationController {
 
 	private final ApplicationService applicationService;
-	private final ActivityLogService activityLogService;
+
 	private final PortalInfoService portalInfoService;
 	private final SettingsService settingsService;
 
@@ -37,7 +37,7 @@ public class ApplicationController {
 			PortalInfoService portalInfoService,
 			SettingsService settingsService) {
 		this.applicationService = applicationService;
-		this.activityLogService = activityLogService;
+		
 		this.portalInfoService = portalInfoService;
 		this.settingsService = settingsService;
 	}

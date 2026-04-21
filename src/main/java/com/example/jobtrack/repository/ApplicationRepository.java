@@ -1,8 +1,11 @@
 package com.example.jobtrack.repository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import com.example.jobtrack.entity.Application;
 import com.example.jobtrack.entity.ApplicationStatus;
@@ -41,4 +44,17 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     List<Application> findAllByOrderByAppliedDateDesc();
 
     List<Application> findAllByOrderByCompanyNameAsc();
+
+    long countByAppliedDateGreaterThanEqual(LocalDate date);
+
+    List<Application> findByUpdatedAtBeforeOrderByUpdatedAtAsc(LocalDateTime dateTime);
+
+    List<Application> findByNextActionAtBetweenOrderByNextActionAtAsc(LocalDateTime start, LocalDateTime end);
+
+    @Query("""
+           select a.currentStatus, count(a)
+           from Application a
+           group by a.currentStatus
+           """)
+    List<Object[]> countGroupByStatus();
 }

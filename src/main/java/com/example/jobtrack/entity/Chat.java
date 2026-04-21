@@ -2,6 +2,7 @@ package com.example.jobtrack.entity;
 
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -17,11 +18,22 @@ public class Chat {
     private String title;
 
     private LocalDateTime createdAt;
+   
+    @Column(length = 5000)
+    private String summary;
 
     public Chat() {
     }
 
-    public Chat(String title, LocalDateTime createdAt) {
+    public String getSummary() {
+		return summary;
+	}
+
+	public void setSummary(String summary) {
+		this.summary = summary;
+	}
+
+	public Chat(String title, LocalDateTime createdAt) {
         this.title = title;
         this.createdAt = createdAt;
     }
@@ -48,5 +60,6 @@ public class Chat {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+        
     }
 }

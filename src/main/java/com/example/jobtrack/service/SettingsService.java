@@ -21,8 +21,31 @@ public class SettingsService {
     }
 
     public Settings getSettings() {
-        return settingsRepository.findById(SETTINGS_ID)
+        Settings settings = settingsRepository.findById(SETTINGS_ID)
                 .orElseGet(this::createDefaultSettings);
+
+        boolean changed = false;
+
+        if (settings.getUseTodayAsDefault() == null) {
+            settings.setUseTodayAsDefault(true);
+            changed = true;
+        }
+
+        if (settings.getAiEnabled() == null) {
+            settings.setAiEnabled(false);
+            changed = true;
+        }
+
+        if (settings.getUseFullChatHistory() == null) {
+            settings.setUseFullChatHistory(false);
+            changed = true;
+        }
+
+        if (changed) {
+            settings = settingsRepository.save(settings);
+        }
+
+        return settings;
     }
 
     public Settings save(String defaultResumeVersion,
@@ -36,7 +59,8 @@ public class SettingsService {
                          String aiSystemPrompt,
                          String aiUserPromptTemplate,
                          Integer aiMaxTokens,
-                         Double aiTemperature, Boolean useFullChatHistory) {
+                         Double aiTemperature,
+                         Boolean useFullChatHistory) {
 
         Settings settings = getSettings();
 
@@ -78,6 +102,7 @@ public class SettingsService {
         settings.setAiUserPromptTemplate("");
         settings.setAiMaxTokens(null);
         settings.setAiTemperature(null);
+        settings.setUseFullChatHistory(false);
 
         return settingsRepository.save(settings);
     }

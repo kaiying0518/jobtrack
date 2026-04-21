@@ -49,5 +49,4 @@ public class Settings {
 
     private Boolean useFullChatHistory;
 
-	public boolean setUseFullChatHistory;
 }

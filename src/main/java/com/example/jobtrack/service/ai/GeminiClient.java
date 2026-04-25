@@ -3,6 +3,8 @@ package com.example.jobtrack.service.ai;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -23,6 +25,8 @@ import com.example.jobtrack.service.ai.dto.gemini.GeminiResponse;
 @Service
 public class GeminiClient implements AiClient {
 
+    private static final Logger log = LoggerFactory.getLogger(GeminiClient.class);
+
     private static final String DEFAULT_MODEL = "gemini-1.5-flash";
 
     private final RestTemplate restTemplate;
@@ -40,6 +44,7 @@ public class GeminiClient implements AiClient {
     public String generateText(Settings settings, String systemPrompt, String userPrompt) {
         validateSettings(settings);
 
+        String model = resolveModel(settings);
         String url = buildUrl(settings);
 
         List<GeminiContent> contents = new ArrayList<>();
@@ -55,10 +60,16 @@ public class GeminiClient implements AiClient {
 
         HttpEntity<GeminiRequest> request = new HttpEntity<>(requestBody, headers);
 
+        log.info("Calling Gemini generateText. model={}", model);
+
         ResponseEntity<GeminiResponse> response;
         try {
             response = restTemplate.postForEntity(url, request, GeminiResponse.class);
+            log.info("Gemini generateText completed. status={}", response.getStatusCode());
         } catch (Exception e) {
+            log.warn("Gemini generateText failed. errorType={}, message={}",
+                    e.getClass().getSimpleName(),
+                    e.getMessage());
             throw convertGeminiException(e);
         }
 
@@ -69,6 +80,7 @@ public class GeminiClient implements AiClient {
     public String chat(Settings settings, String systemPrompt, List<AiChatMessage> messages) {
         validateSettings(settings);
 
+        String model = resolveModel(settings);
         String url = buildUrl(settings);
 
         List<GeminiContent> contents = new ArrayList<>();
@@ -84,10 +96,18 @@ public class GeminiClient implements AiClient {
 
         HttpEntity<GeminiRequest> request = new HttpEntity<>(requestBody, headers);
 
+        log.info("Calling Gemini chat. model={}, messageCount={}",
+                model,
+                messages == null ? 0 : messages.size());
+
         ResponseEntity<GeminiResponse> response;
         try {
             response = restTemplate.postForEntity(url, request, GeminiResponse.class);
+            log.info("Gemini chat completed. status={}", response.getStatusCode());
         } catch (Exception e) {
+            log.warn("Gemini chat failed. errorType={}, message={}",
+                    e.getClass().getSimpleName(),
+                    e.getMessage());
             throw convertGeminiException(e);
         }
 

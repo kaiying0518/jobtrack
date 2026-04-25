@@ -4,29 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ホーム</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css(v=${#dates.createNow().time})}">
 </head>
 <body>
-<div class="app-shell">
+<div class="app-shell" id="app-shell">
     <aside class="sidebar">
-        <div class="brand">JobTrack</div>
+        <div class="sidebar-header">
+            <div class="sidebar-header-main">
+                <div class="brand brand-full">JobTrack</div>
+                <div class="brand brand-mini">JT</div>
+            </div>
+
+            <button type="button" class="sidebar-toggle" id="sidebar-toggle-btn" aria-label="メニュー切り替え">
+                ☰
+            </button>
+        </div>
+
         <nav class="nav-group">
-            <a class="nav-link active" th:href="@{/dashboard}">ホーム</a>
-            <a class="nav-link" th:href="@{/applications}">応募一覧</a>
-            <a class="nav-link" th:href="@{/reflections}">振り返り</a>
-            <a class="nav-link" th:href="@{/settings}">設定</a>
+            <a class="nav-link active" th:href="@{/dashboard}">
+                <span class="nav-icon">⌂</span>
+                <span class="nav-label">ホーム</span>
+            </a>
+            <a class="nav-link" th:href="@{/applications}">
+                <span class="nav-icon">▤</span>
+                <span class="nav-label">応募一覧</span>
+            </a>
+            <a class="nav-link" th:href="@{/reflections}">
+                <span class="nav-icon">✦</span>
+                <span class="nav-label">振り返り</span>
+            </a>
+            <a class="nav-link" th:href="@{/settings}">
+                <span class="nav-icon">⚙</span>
+                <span class="nav-label">設定</span>
+            </a>
         </nav>
     </aside>
 
     <main class="main">
         <div class="topbar">
-            <div>
-                <h1 class="page-title">総覧</h1>
-                <p class="page-desc">
-                    応募状況をまとめて確認できます。
-                </p>
+            <div class="topbar-left">
+                <div>
+                    <h1 class="page-title">総覧</h1>
+                </div>
             </div>
-           
         </div>
 
         <section class="grid-4">
@@ -63,25 +83,32 @@
             </div>
         </section>
 
-        <section class="grid-2">
-            <div class="card">
+        <section class="grid-2 dashboard-grid">
+            <div class="card compact-card">
                 <div class="card-title-row">
                     <h2 class="card-title">最近更新した応募</h2>
-                    <a class="text-link" th:href="@{/applications}">すべて見る</a>
                 </div>
 
-                <div class="mini-list" th:if="${recentApplications != null and !#lists.isEmpty(recentApplications)}">
-                    <div class="mini-item" th:each="app : ${recentApplications}">
-                        <div>
-                            <div class="mini-title" th:text="${app.companyName}">会社名</div>
-                            <div class="mini-sub">
+                <div class="compact-list" th:if="${recentApplications != null and !#lists.isEmpty(recentApplications)}">
+                    <div class="compact-row" th:each="app : ${recentApplications}">
+                        <div class="compact-main">
+                            <div class="compact-title" th:text="${app.companyName}">会社名</div>
+                            <div class="compact-sub">
                                 <span th:text="${app.positionName}">職種</span>
-                                ·
+                                <span th:if="${app.positionName != null and !#strings.isEmpty(app.positionName)} and ${app.channel != null and !#strings.isEmpty(app.channel)}"> · </span>
                                 <span th:text="${app.channel}">応募経由</span>
                             </div>
                         </div>
 
                         <span class="badge"
+                              th:classappend="${
+                                  app.currentStatus == null ? ' badge-applied' :
+                                  (app.currentStatus.name() == 'APPLIED' ? ' badge-applied' :
+                                  (app.currentStatus.name() == 'WEB_TEST' ? ' badge-web-test' :
+                                  (app.currentStatus.name() == 'DOCUMENT_PASS' ? ' badge-doc-pass' :
+                                  (app.currentStatus.name() == 'INTERVIEW_1' or app.currentStatus.name() == 'INTERVIEW_2' or app.currentStatus.name() == 'FINAL_INTERVIEW' ? ' badge-interview' :
+                                  (app.currentStatus.name() == 'OFFER' ? ' badge-offer' :
+                                  (app.currentStatus.name() == 'REJECT' ? ' badge-reject' : ' badge-withdrawn'))))))}"
                               th:text="${app.currentStatus == null ? '未設定' : app.currentStatus.label}">
                             応募済み
                         </span>
@@ -93,18 +120,52 @@
                 </div>
             </div>
 
-			<div class="card">
-			    <div class="card-title-row">
-			        <h2 class="card-title">AI Summary</h2>
-			    </div>
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">AI Summary</h2>
+                </div>
 
-			    <div class="empty-box" style="white-space: pre-line;">
-			        まだAIサマリーはありません。
-			        AI連携後、ここに短い要約を表示します。
-			    </div>
-			</div>
+				<div id="dashboard-ai-summary"
+				     class="empty-box dashboard-summary-placeholder"
+				     style="white-space: pre-line;">
+				    まだAIサマリーはありません。
+				</div>
+            </div>
         </section>
     </main>
 </div>
+
+<script th:inline="javascript">
+document.addEventListener("DOMContentLoaded", function () {
+    const AI_SUMMARY_STORAGE_KEY = "jobtrack_ai_summary";
+    const totalCount = /*[[${totalCount}]]*/ 0;
+
+    const appShell = document.getElementById("app-shell");
+    const sidebarToggleBtn = document.getElementById("sidebar-toggle-btn");
+    const dashboardSummary = document.getElementById("dashboard-ai-summary");
+
+    if (sidebarToggleBtn && appShell) {
+        sidebarToggleBtn.addEventListener("click", function () {
+            appShell.classList.toggle("sidebar-collapsed");
+        });
+    }
+
+    if (dashboardSummary) {
+        if (totalCount === 0) {
+            localStorage.removeItem(AI_SUMMARY_STORAGE_KEY);
+            dashboardSummary.textContent = "まだ応募データがありません。応募情報を登録すると、AIサマリーを確認できます。";
+            return;
+        }
+
+        const savedSummary = localStorage.getItem(AI_SUMMARY_STORAGE_KEY);
+
+        if (savedSummary && savedSummary.trim()) {
+            dashboardSummary.textContent = savedSummary;
+        } else {
+            dashboardSummary.textContent = "まだAIサマリーはありません。";
+        }
+    }
+});
+</script>
 </body>
 </html>

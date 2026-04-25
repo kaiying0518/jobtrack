@@ -3,6 +3,8 @@ package com.example.jobtrack.service.ai;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -22,6 +24,8 @@ import com.example.jobtrack.service.ai.dto.claude.ClaudeResponse;
 
 @Service
 public class ClaudeClient implements AiClient {
+
+    private static final Logger log = LoggerFactory.getLogger(ClaudeClient.class);
 
     private static final String CLAUDE_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
     private static final String DEFAULT_MODEL = "claude-3-5-sonnet-latest";
@@ -56,6 +60,10 @@ public class ClaudeClient implements AiClient {
         HttpHeaders headers = createHeaders(settings);
         HttpEntity<ClaudeRequest> request = new HttpEntity<>(requestBody, headers);
 
+        log.info("Calling Claude generateText. model={}, maxTokens={}",
+                requestBody.getModel(),
+                requestBody.getMaxTokens());
+
         ResponseEntity<ClaudeResponse> response;
         try {
             response = restTemplate.postForEntity(
@@ -63,7 +71,11 @@ public class ClaudeClient implements AiClient {
                     request,
                     ClaudeResponse.class
             );
+            log.info("Claude generateText completed. status={}", response.getStatusCode());
         } catch (Exception e) {
+            log.warn("Claude generateText failed. errorType={}, message={}",
+                    e.getClass().getSimpleName(),
+                    e.getMessage());
             throw convertClaudeException(e);
         }
 
@@ -93,6 +105,11 @@ public class ClaudeClient implements AiClient {
         HttpHeaders headers = createHeaders(settings);
         HttpEntity<ClaudeRequest> request = new HttpEntity<>(requestBody, headers);
 
+        log.info("Calling Claude chat. model={}, maxTokens={}, messageCount={}",
+                requestBody.getModel(),
+                requestBody.getMaxTokens(),
+                requestMessages.size());
+
         ResponseEntity<ClaudeResponse> response;
         try {
             response = restTemplate.postForEntity(
@@ -100,7 +117,11 @@ public class ClaudeClient implements AiClient {
                     request,
                     ClaudeResponse.class
             );
+            log.info("Claude chat completed. status={}", response.getStatusCode());
         } catch (Exception e) {
+            log.warn("Claude chat failed. errorType={}, message={}",
+                    e.getClass().getSimpleName(),
+                    e.getMessage());
             throw convertClaudeException(e);
         }
 

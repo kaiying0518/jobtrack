@@ -3,12 +3,22 @@ package com.example.jobtrack.controller;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +37,7 @@ import com.example.jobtrack.service.SettingsService;
 public class SettingsController {
 
     private final SettingsService settingsService;
+    private static final Logger log = LoggerFactory.getLogger(SettingsController.class);
     private final ApplicationService applicationService;
 
     public SettingsController(SettingsService settingsService,
@@ -37,6 +48,7 @@ public class SettingsController {
 
     @GetMapping("/settings")
     public String showSettings(Model model) {
+    	log.info("Settings page opened");
         Settings settings = settingsService.getSettings();
 
         model.addAttribute("settings", settings);
@@ -112,6 +124,10 @@ public class SettingsController {
                 aiTemperature,
                 useFullChatHistory != null ? useFullChatHistory : false
         );
+        log.info("Settings saved. aiEnabled={}, aiProvider={}, useFullChatHistory={}",
+                resolvedAiEnabled,
+                resolvedAiProvider,
+                useFullChatHistory != null ? useFullChatHistory : false);
 
         redirectAttributes.addFlashAttribute("successMessage", "設定を保存しました");
         return "redirect:/settings";
@@ -192,6 +208,23 @@ public class SettingsController {
         }
         return dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
     }
+    @GetMapping("/settings/export/logs")
+    public ResponseEntity<Resource> exportLogs() throws IOException {
+        Path logPath = Paths.get("logs/jobtrack.log");
+
+        if (!Files.exists(logPath)) {
+            Files.createDirectories(logPath.getParent());
+            Files.writeString(logPath, "No logs yet.");
+        }
+
+        Resource resource = new FileSystemResource(logPath);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=jobtrack.log")
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(resource);
+    }
+    
 }
 
    

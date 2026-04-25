@@ -48,3 +48,18 @@ data/
 ### OS files ###
 .DS_Store
 Thumbs.db
+# Local database and logs
+/data/
+/logs/
+*.mv.db
+*.trace.db
+*.lock.db
+
+# Release package
+/release/
+
+# Launch4j
+launch4j.log
+
+# Build output
+/build/

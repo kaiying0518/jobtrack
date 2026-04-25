@@ -4,37 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>応募一覧</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css(v=${#dates.createNow().time})}">
 </head>
 <body>
-<div class="app-shell">
+<div class="app-shell" id="app-shell">
     <aside class="sidebar">
-        <div class="brand">JobTrack</div>
+        <div class="sidebar-header">
+            <div class="sidebar-header-main">
+                <div class="brand brand-full">JobTrack</div>
+                <div class="brand brand-mini">JT</div>
+            </div>
+
+            <button type="button" class="sidebar-toggle" id="sidebar-toggle-btn" aria-label="メニュー切り替え">
+                ☰
+            </button>
+        </div>
+
         <nav class="nav-group">
-            <a class="nav-link" th:href="@{/dashboard}">ホーム</a>
-            <a class="nav-link active" th:href="@{/applications}">応募一覧</a>
-            <a class="nav-link" th:href="@{/reflections}">振り返り</a>
-            <a class="nav-link" th:href="@{/settings}">設定</a>
+            <a class="nav-link" th:href="@{/dashboard}">
+                <span class="nav-icon">⌂</span>
+                <span class="nav-label">ホーム</span>
+            </a>
+            <a class="nav-link active" th:href="@{/applications}">
+                <span class="nav-icon">▤</span>
+                <span class="nav-label">応募一覧</span>
+            </a>
+            <a class="nav-link" th:href="@{/reflections}">
+                <span class="nav-icon">✦</span>
+                <span class="nav-label">振り返り</span>
+            </a>
+            <a class="nav-link" th:href="@{/settings}">
+                <span class="nav-icon">⚙</span>
+                <span class="nav-label">設定</span>
+            </a>
         </nav>
     </aside>
 
     <main class="main">
         <div class="topbar">
-            <div>
+            <div class="topbar-left">
                 <h1 class="page-title">応募一覧</h1>
-                <p class="page-desc">
-                    応募した会社と今の状況をまとめて確認できます。
-                </p>
             </div>
+
             <div class="topbar-actions">
                 <a class="btn btn-primary" th:href="@{/applications/new}">＋ 新しく追加</a>
             </div>
         </div>
 
-        <section class="card">
+        <section class="card compact-card">
             <div class="card-title-row">
                 <h2 class="card-title">条件で探す</h2>
-                <span class="card-subtext">会社名や状況で絞り込めます</span>
             </div>
 
             <form class="filter-bar" th:action="@{/applications}" method="get">
@@ -74,7 +93,7 @@
             </form>
         </section>
 
-        <section class="card">
+        <section class="card compact-card">
             <div class="card-title-row">
                 <h2 class="card-title">応募一覧</h2>
                 <span class="card-subtext">
@@ -97,21 +116,17 @@
                     </thead>
 
                     <tbody>
-                    <tr th:each="app : ${applications}">
+                    <tr th:each="app : ${applications}"
+                        th:attr="data-updated-at=${app.updatedAt != null ? #temporals.format(app.updatedAt, 'yyyy-MM-dd') : ''},
+                                 data-next-action-at=${app.nextActionAt != null ? #temporals.format(app.nextActionAt, 'yyyy-MM-dd') : ''}">
                         <td>
                             <div class="company-cell">
                                 <div class="company-name" th:text="${app.companyName}">会社名</div>
                                 <div class="company-role" th:text="${app.positionName}">職種</div>
-
-                                <div th:if="${inactiveReminderMap != null and inactiveReminderMap[app.id]}"
-                                     style="margin-top: 6px;">
-                                    <span class="badge" style="opacity: 0.7;">2週間更新なし</span>
-                                </div>
                             </div>
                         </td>
 
-                        <td th:text="
-                            ${app.channel == null or #strings.isEmpty(app.channel)} ? '未設定' :
+                        <td th:text="${app.channel == null or #strings.isEmpty(app.channel)} ? '未設定' :
                             (${app.channel == 'JOB_SITE'} ? '求人サイト' :
                             (${app.channel == 'AGENT'} ? 'エージェント' :
                             (${app.channel == 'SCOUT'} ? 'スカウト' :
@@ -121,6 +136,13 @@
 
                         <td>
                             <span class="badge"
+                                  th:classappend="${app.currentStatus == null ? ' badge-applied' :
+                                  (app.currentStatus.name() == 'APPLIED' ? ' badge-applied' :
+                                  (app.currentStatus.name() == 'WEB_TEST' ? ' badge-web-test' :
+                                  (app.currentStatus.name() == 'DOCUMENT_PASS' ? ' badge-doc-pass' :
+                                  (app.currentStatus.name() == 'INTERVIEW_1' or app.currentStatus.name() == 'INTERVIEW_2' or app.currentStatus.name() == 'FINAL_INTERVIEW' ? ' badge-interview' :
+                                  (app.currentStatus.name() == 'OFFER' ? ' badge-offer' :
+                                  (app.currentStatus.name() == 'REJECT' ? ' badge-reject' : ' badge-withdrawn'))))))}"
                                   th:text="${app.currentStatus == null ? '未設定' : app.currentStatus.label}">
                                 応募済み
                             </span>
@@ -136,12 +158,14 @@
                             <span th:if="${app.nextActionAt == null}">-</span>
                         </td>
 
-                        <td th:text="${#temporals.format(app.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-03-26</td>
+                        <td th:text="${#temporals.format(app.updatedAt, 'yyyy-MM-dd HH:mm')}">
+                            2026-03-26
+                        </td>
 
                         <td>
-							<a class="text-link" th:href="@{/applications/{id}/edit(id=${app.id})}">
-							    詳細
-							</a>
+                            <a class="text-link" th:href="@{/applications/{id}/edit(id=${app.id})}">
+                                詳細
+                            </a>
                         </td>
                     </tr>
                     </tbody>
@@ -154,5 +178,49 @@
         </section>
     </main>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const appShell = document.getElementById("app-shell");
+    const sidebarToggleBtn = document.getElementById("sidebar-toggle-btn");
+
+    if (sidebarToggleBtn && appShell) {
+        sidebarToggleBtn.addEventListener("click", function () {
+            appShell.classList.toggle("sidebar-collapsed");
+        });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    document.querySelectorAll(".data-table tbody tr").forEach(row => {
+        const updatedAtText = row.dataset.updatedAt;
+        const nextActionAtText = row.dataset.nextActionAt;
+
+        if (updatedAtText) {
+            const updatedAt = new Date(updatedAtText);
+            updatedAt.setHours(0, 0, 0, 0);
+
+            const diffDays = Math.floor((today - updatedAt) / (1000 * 60 * 60 * 24));
+
+            if (diffDays >= 14) {
+                row.classList.add("inactive-row");
+            }
+        }
+
+        if (nextActionAtText) {
+            const nextActionAt = new Date(nextActionAtText);
+            nextActionAt.setHours(0, 0, 0, 0);
+
+            if (nextActionAt.getTime() === tomorrow.getTime()) {
+                row.classList.add("tomorrow-row");
+            }
+        }
+    });
+});
+</script>
 </body>
 </html>

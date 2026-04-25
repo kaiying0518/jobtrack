@@ -22,6 +22,7 @@ import com.example.jobtrack.entity.AiProviderType;
 import com.example.jobtrack.entity.Chat;
 import com.example.jobtrack.entity.ChatMessage;
 import com.example.jobtrack.entity.Settings;
+import com.example.jobtrack.repository.ApplicationRepository;
 import com.example.jobtrack.repository.ChatMessageRepository;
 import com.example.jobtrack.repository.ChatRepository;
 import com.example.jobtrack.service.SettingsService;
@@ -57,6 +58,8 @@ class AiChatServiceImplTest {
 
     @Mock
     private OpenAiClient openAiClient;
+    @Mock
+    private ApplicationRepository applicationRepository;
 
     private AiChatServiceImpl aiChatService;
 
@@ -67,8 +70,9 @@ class AiChatServiceImplTest {
         aiChatService = new AiChatServiceImpl(
                 chatRepository,
                 chatMessageRepository,
+                applicationRepository,
                 settingsService,
-                List.of(openAiClient),
+                List.<AiClient>of(openAiClient),
                 backgroundSummaryService,
                 queryPlanningService,
                 queryToolService,
@@ -84,6 +88,7 @@ class AiChatServiceImplTest {
 
         when(settingsService.getSettings()).thenReturn(settings);
         when(backgroundSummaryService.buildSummary()).thenReturn("BACKGROUND");
+        when(applicationRepository.findAll()).thenReturn(List.of());
         
 
         when(openAiClient.chat(any(Settings.class), anyString(), anyList()))

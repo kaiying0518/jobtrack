@@ -1,45 +1,64 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ja">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>設定</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css(v=${#dates.createNow().time})}">
 </head>
-
 <body>
-<div class="app-shell">
+<div class="app-shell" id="app-shell">
     <aside class="sidebar">
-        <div class="brand">JobTrack</div>
+        <div class="sidebar-header">
+            <div class="sidebar-header-main">
+                <div class="brand brand-full">JobTrack</div>
+                <div class="brand brand-mini">JT</div>
+            </div>
+
+            <button type="button" class="sidebar-toggle" id="sidebar-toggle-btn" aria-label="メニュー切り替え">
+                ☰
+            </button>
+        </div>
+
         <nav class="nav-group">
-            <a class="nav-link" th:href="@{/dashboard}">ホーム</a>
-            <a class="nav-link" th:href="@{/applications}">応募一覧</a>
-            <a class="nav-link" th:href="@{/reflections}">AI振り返り</a>
-            <a class="nav-link active" th:href="@{/settings}">設定</a>
+            <a class="nav-link" th:href="@{/dashboard}">
+                <span class="nav-icon">⌂</span>
+                <span class="nav-label">ホーム</span>
+            </a>
+            <a class="nav-link" th:href="@{/applications}">
+                <span class="nav-icon">▤</span>
+                <span class="nav-label">応募一覧</span>
+            </a>
+            <a class="nav-link" th:href="@{/reflections}">
+                <span class="nav-icon">✦</span>
+                <span class="nav-label">振り返り</span>
+            </a>
+            <a class="nav-link active" th:href="@{/settings}">
+                <span class="nav-icon">⚙</span>
+                <span class="nav-label">設定</span>
+            </a>
         </nav>
     </aside>
 
     <main class="main">
         <div class="topbar">
-            <div>
-                <h1 class="page-title">設定</h1>
+            <div class="topbar-left">
+                <div>
+                    <h1 class="page-title">設定</h1>
+                    <p class="page-desc">AI連携や出力設定を管理できます。</p>
+                </div>
             </div>
         </div>
 
-        <div th:if="${successMessage}" class="card" style="margin-bottom: 12px;">
-            <p th:text="${successMessage}" style="margin: 0; color: #166534; font-weight: 600;">
-                保存しました
-            </p>
+        <div th:if="${successMessage}" class="card card-alert card-alert-success">
+            <p th:text="${successMessage}" style="margin: 0;">保存しました</p>
         </div>
 
-        <div th:if="${errorMessage}" class="card" style="margin-bottom: 12px;">
-            <p th:text="${errorMessage}" style="margin: 0; color: #b91c1c; font-weight: 600;">
-                エラーがあります
-            </p>
+        <div th:if="${errorMessage}" class="card card-alert card-alert-danger">
+            <p th:text="${errorMessage}" style="margin: 0;">エラーがあります</p>
         </div>
 
-        <section class="grid-2">
+        <section class="grid-2 settings-grid">
             <div class="card">
                 <div class="card-title-row">
                     <h2 class="card-title">AI連携</h2>
@@ -47,8 +66,8 @@
 
                 <form id="ai-settings-form" th:action="@{/settings}" method="post">
                     <div class="info-list">
-                        <div class="info-item" style="grid-column: 1 / -1;">
-                            <label class="info-label" style="display: flex; align-items: center; gap: 8px;">
+                        <div class="info-item info-item-full">
+                            <label class="info-label checkbox-label">
                                 <input type="checkbox" id="aiEnabled" name="aiEnabled" value="true"
                                        th:checked="${settings.aiEnabled}">
                                 AI連携を有効にする
@@ -67,7 +86,7 @@
                             </select>
                         </div>
 
-                        <div class="info-item" style="grid-column: 1 / -1;">
+                        <div class="info-item info-item-full">
                             <label class="info-label" for="aiApiKey">API Key</label>
                             <input class="input" id="aiApiKey" type="password" name="aiApiKey"
                                    placeholder="未入力の場合は現在のAPIキーを保持します">
@@ -76,17 +95,28 @@
                             <input type="hidden" id="currentAiProvider" th:value="${currentAiProvider}">
 
                             <div id="aiApiKeyError"
-                                 class="card-subtext"
-                                 style="margin-top: 6px; color: #b91c1c; display: none;"></div>
+                                 class="card-subtext form-error"
+                                 style="display: none;"></div>
                         </div>
 
-                        <div class="info-item" style="grid-column: 1 / -1;">
-                            <details style="width: 100%;">
-                                <summary style="cursor: pointer; font-weight: 600; margin-bottom: 8px;">
+                        <div class="info-item info-item-full">
+                            <label class="info-label checkbox-label">
+                                <input type="checkbox" name="useFullChatHistory" value="true"
+                                       th:checked="${settings.useFullChatHistory}">
+                                AI Chatで全履歴を使う
+                            </label>
+                            <div class="card-subtext setting-inline-help">
+                                オフの場合は直近8件のメッセージのみAIに送信します。
+                            </div>
+                        </div>
+
+                        <div class="info-item info-item-full">
+                            <details class="settings-details">
+                                <summary class="settings-summary">
                                     詳細設定（必要な場合のみ）
                                 </summary>
 
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+                                <div class="settings-detail-grid">
                                     <div>
                                         <label class="info-label" for="aiModel">Model</label>
                                         <input class="input" id="aiModel" type="text" name="aiModel"
@@ -102,59 +132,59 @@
                                                placeholder="例：0.4">
                                     </div>
 
-                                    <div style="grid-column: 1 / -1;">
+                                    <div class="detail-full">
                                         <label class="info-label" for="aiMaxTokens">Max Tokens</label>
                                         <input class="input" id="aiMaxTokens" type="number" name="aiMaxTokens"
                                                th:value="${settings.aiMaxTokens}"
                                                placeholder="例：800">
                                     </div>
 
-                                    <div style="grid-column: 1 / -1;">
+                                    <div class="detail-full">
                                         <label class="info-label" for="aiSystemPrompt">System Prompt</label>
                                         <textarea class="textarea" id="aiSystemPrompt" name="aiSystemPrompt"
                                                   placeholder="AIの役割や出力方針を指定"
                                                   th:text="${settings.aiSystemPrompt}"></textarea>
                                     </div>
 
-                                    <div style="grid-column: 1 / -1;">
+                                    <div class="detail-full">
                                         <label class="info-label" for="aiUserPromptTemplate">User Prompt Template</label>
                                         <textarea class="textarea" id="aiUserPromptTemplate" name="aiUserPromptTemplate"
                                                   placeholder="追加の指示や出力形式を指定"
                                                   th:text="${settings.aiUserPromptTemplate}"></textarea>
-                                    </div>
-
-                                    <div style="grid-column: 1 / -1;">
-                                        <label class="info-label" style="display: flex; align-items: center; gap: 8px;">
-                                            <input type="checkbox" name="useFullChatHistory" value="true"
-                                                   th:checked="${settings.useFullChatHistory}">
-                                            AI Chatで全履歴を使う
-                                        </label>
-                                        <div class="card-subtext" style="margin-top: 6px;">
-                                            オフの場合は直近8件のメッセージのみAIに送信します。
-                                        </div>
                                     </div>
                                 </div>
                             </details>
                         </div>
                     </div>
 
-                    <div class="topbar-actions" style="margin-top: 12px;">
+                    <div class="topbar-actions" style="margin-top: 14px;">
                         <button class="btn btn-primary" type="submit">保存する</button>
                     </div>
                 </form>
             </div>
 
-            <div class="card">
-                <div class="card-title-row">
-                    <h2 class="card-title">CSV出力</h2>
-                </div>
+            <div class="stack-col">
+                <div class="card">
+                    <div class="card-title-row">
+                        <h2 class="card-title">データ出力</h2>
+                    </div>
 
-                <div class="mini-list">
-                    <div class="mini-item">
-                        <div>
-                            <div class="mini-title">応募一覧をCSVで出力</div>
+                    <div class="compact-list">
+                        <div class="compact-row">
+                            <div class="compact-main">
+                                <div class="compact-title">応募一覧をCSVで出力</div>
+                                <div class="compact-sub">保存した応募データをCSVでダウンロードします。</div>
+                            </div>
+                            <a class="btn btn-secondary" th:href="@{/settings/export/csv}">出力</a>
                         </div>
-                        <a class="btn btn-secondary" th:href="@{/settings/export/csv}">出力</a>
+
+                        <div class="compact-row">
+                            <div class="compact-main">
+                                <div class="compact-title">ログを出力</div>
+                                <div class="compact-sub">アプリのログを確認用にダウンロードします。</div>
+                            </div>
+                            <a class="btn btn-secondary" th:href="@{/settings/export/logs}">出力</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -164,6 +194,9 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    const appShell = document.getElementById("app-shell");
+    const sidebarToggleBtn = document.getElementById("sidebar-toggle-btn");
+
     const form = document.getElementById("ai-settings-form");
     const aiEnabled = document.getElementById("aiEnabled");
     const aiProvider = document.getElementById("aiProvider");
@@ -171,6 +204,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const aiApiKeyError = document.getElementById("aiApiKeyError");
     const hasAiApiKey = document.getElementById("hasAiApiKey");
     const currentAiProvider = document.getElementById("currentAiProvider");
+
+    if (sidebarToggleBtn && appShell) {
+        sidebarToggleBtn.addEventListener("click", function () {
+            appShell.classList.toggle("sidebar-collapsed");
+        });
+    }
 
     if (!form || !aiEnabled || !aiProvider || !aiApiKey || !aiApiKeyError || !hasAiApiKey || !currentAiProvider) {
         return;
@@ -230,5 +269,4 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 </body>
-
 </html>

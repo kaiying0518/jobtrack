@@ -60,3 +60,5 @@ macOS 版については、`.app` 形式での打包および動作確認に mac
 
 自動で開かない場合は、以下のURLを手動で開いてください。
 http://localhost:8080
+
+If this project helps you, feel free to ⭐ the repo! :)
